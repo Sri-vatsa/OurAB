@@ -21,8 +21,12 @@ import seedu.address.model.person.ReadOnlyPerson;
 public class BrowserPanel extends UiPart<Region> {
 
     public static final String DEFAULT_PAGE = "default.html";
-    public static final String GOOGLE_SEARCH_URL_PREFIX = "https://www.google.com.sg/search?safe=off&q=";
-    public static final String GOOGLE_SEARCH_URL_SUFFIX = "&cad=h";
+    public static final String LINKEDIN_SEARCH_URL_PREFIX = "https://www.linkedin.com/search/results/";
+    public static final String LINKEDIN_SEARCH_PEOPLE = "people/";
+    public static final String LINKEDIN_SEARCH_PARAM_LOCATION = "?facetGeoRegion=%5B\"sg%3A0\"%5D";
+    public static final String LINKEDIN_SEARCH_PARAM_FIRST_NAME = "&firstName=";
+    public static final String LINKEDIN_SEARCH_PARAM_LAST_NAME = "&lastName=";
+    public static final String LINKEDIN_URL_SUFFIX = "&origin=FACETED_SEARCH";
 
     private static final String FXML = "BrowserPanel.fxml";
 
@@ -41,9 +45,13 @@ public class BrowserPanel extends UiPart<Region> {
         registerAsAnEventHandler(this);
     }
 
+    //Assumes name is of format firstName lastName
     private void loadPersonPage(ReadOnlyPerson person) {
-        loadPage(GOOGLE_SEARCH_URL_PREFIX + person.getName().fullName.replaceAll(" ", "+")
-                + GOOGLE_SEARCH_URL_SUFFIX);
+
+        String [] Name = person.getName().fullName.split(" ");
+
+        loadPage(LINKEDIN_SEARCH_URL_PREFIX + LINKEDIN_SEARCH_PEOPLE + LINKEDIN_SEARCH_PARAM_LOCATION + LINKEDIN_SEARCH_PARAM_FIRST_NAME +
+                Name[0] + LINKEDIN_SEARCH_PARAM_LAST_NAME + Name[1] + LINKEDIN_URL_SUFFIX);
     }
 
     public void loadPage(String url) {
