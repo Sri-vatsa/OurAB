@@ -5,6 +5,7 @@ import java.util.logging.Logger;
 
 import com.google.common.eventbus.Subscribe;
 
+import com.sun.webkit.dom.HTMLElementImpl;
 import javafx.application.Platform;
 import javafx.event.Event;
 import javafx.fxml.FXML;
@@ -14,14 +15,19 @@ import seedu.address.MainApp;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.events.ui.PersonPanelSelectionChangedEvent;
 import seedu.address.model.person.ReadOnlyPerson;
-
+import java.util.concurrent.atomic.AtomicBoolean;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.concurrent.Worker;
+import javafx.scene.web.WebEngine;
+import org.w3c.dom.Element;
 /**
  * The Browser Panel of the App.
  */
 public class BrowserPanel extends UiPart<Region> {
 
     public static final String DEFAULT_PAGE = "default.html";
-    public static final String GOOGLE_SEARCH_URL_PREFIX = "https://www.google.com.sg/search?safe=off&q=";
+    public static final String FB_SEARCH_URL_PREFIX = "https://www.google.com.sg/search?safe=off&q=";
     public static final String GOOGLE_SEARCH_URL_SUFFIX = "&cad=h";
 
     private static final String FXML = "BrowserPanel.fxml";
@@ -42,12 +48,47 @@ public class BrowserPanel extends UiPart<Region> {
     }
 
     private void loadPersonPage(ReadOnlyPerson person) {
-        loadPage(GOOGLE_SEARCH_URL_PREFIX + person.getName().fullName.replaceAll(" ", "+")
-                + GOOGLE_SEARCH_URL_SUFFIX);
+        loadPage("https://www.facebook.com/");
     }
 
     public void loadPage(String url) {
-        Platform.runLater(() -> browser.getEngine().load(url));
+
+        final WebEngine engine = browser.getEngine();
+        engine.load("https://www.facebook.com/");
+        engine.setJavaScriptEnabled( true );
+        //md5 hash and save
+        final String username = "srivatsa10@gmail.com";
+        final String password = "Srivatsa@1995";
+        final AtomicBoolean submitted = new AtomicBoolean();
+        engine.getLoadWorker().stateProperty().addListener(
+                new ChangeListener<Worker.State>() {
+                    @Override
+                    public void changed(ObservableValue<? extends Worker.State> ov,
+                                        Worker.State oldState, Worker.State newState) {
+                        if (newState == Worker.State.SUCCEEDED) {
+
+                                Element emailField = engine.getDocument().getElementById("email");
+                                if (emailField != null) {
+                                    emailField.setAttribute("Value", username);
+                                }
+                                Element passwordField = engine.getDocument().getElementById("pass");
+                                if (emailField != null) {
+                                    passwordField.setAttribute("Value", password);
+                                }
+                                HTMLElementImpl loginButton = (HTMLElementImpl) engine.getDocument().getElementById("loginbutton");
+                                if (loginButton != null) {
+                                    loginButton.addEventListener("click", event -> {}, false);
+                                    loginButton.click();
+                                }
+                                engine.load("https://www.facebook.com/search/people/?q=martyn");
+                            }
+                        }
+                    }
+        );
+
+        //engine.load(url); */
+
+        //Platform.runLater(() -> browser.getEngine().load(url));
     }
 
     /**
