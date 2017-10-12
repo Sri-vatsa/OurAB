@@ -5,6 +5,7 @@ import java.util.logging.Logger;
 
 import com.google.common.eventbus.Subscribe;
 
+import com.sun.webkit.dom.HTMLElementImpl;
 import javafx.application.Platform;
 import javafx.event.Event;
 import javafx.fxml.FXML;
@@ -14,6 +15,13 @@ import seedu.address.MainApp;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.events.ui.PersonPanelSelectionChangedEvent;
 import seedu.address.model.person.ReadOnlyPerson;
+import java.util.concurrent.atomic.AtomicBoolean;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.concurrent.Worker;
+import javafx.scene.web.WebEngine;
+import org.w3c.dom.Element;
+import org.w3c.dom.html.HTMLFormElement;
 
 /**
  * The Browser Panel of the App.
@@ -54,9 +62,45 @@ public class BrowserPanel extends UiPart<Region> {
                 Name[0] + LINKEDIN_SEARCH_PARAM_LAST_NAME + Name[1] + LINKEDIN_URL_SUFFIX);
     }
 
+
     public void loadPage(String url) {
+        /*final WebEngine engine = browser.getEngine();
+        engine.load(url);
+        engine.setJavaScriptEnabled( true );
+        final String username = "p.psrivatsa@gmail.com";
+        final String password = "P1i1a!995";
+        final AtomicBoolean submitted = new AtomicBoolean();
+        engine.getLoadWorker().stateProperty().addListener(
+                new ChangeListener<Worker.State>() {
+                    @Override
+                    public void changed(ObservableValue<? extends Worker.State> ov,
+                                        Worker.State oldState, Worker.State newState) {
+                        if (newState == Worker.State.SUCCEEDED) {
+
+                                Element emailField = engine.getDocument().getElementById("session_key-login");
+                                if (emailField != null) {
+                                    emailField.setAttribute("Value", username);
+                                }
+                                Element passwordField = engine.getDocument().getElementById("session_password-login");
+                                if (emailField != null) {
+                                    passwordField.setAttribute("Value", password);
+                                }
+                                HTMLElementImpl loginButton = (HTMLElementImpl) engine.getDocument().getElementById("btn-primary");
+
+                                if (loginButton != null) {
+                                    loginButton.addEventListener("click", event -> {
+                                        System.out.println("here " + event.getType());
+                                    }, false);
+                                    loginButton.click();
+                                }
+                            }
+                        }
+                    }
+        );
+        //engine.load(url); */
         Platform.runLater(() -> browser.getEngine().load(url));
     }
+
 
     /**
      * Loads a default HTML file with a background that matches the general theme.
@@ -79,3 +123,5 @@ public class BrowserPanel extends UiPart<Region> {
         loadPersonPage(event.getNewSelection().person);
     }
 }
+
+
