@@ -1,57 +1,365 @@
 # Sri-vatsa
-###### /java/seedu/address/ui/BrowserPanelTest.java
+###### /java/seedu/address/logic/commands/AddCommandTest.java
 ``` java
+        @Override
+        public void addMeeting(ReadOnlyMeeting meeting) throws DuplicateMeetingException, IllegalIdException {
+            fail("This method should not be called.");
+        }
+        //@author
+        @Override
+        public void updatePerson(ReadOnlyPerson target, ReadOnlyPerson editedPerson)
+                throws DuplicatePersonException {
+            fail("This method should not be called.");
+        }
+
+        @Override
+        public ObservableList<ReadOnlyPerson> getFilteredPersonList() {
+            fail("This method should not be called.");
+            return null;
+        }
+
+        @Override
+        public void updateFilteredPersonList() {
+            updateFilteredPersonList();
+        }
+
+        @Override
+        public void updateFilteredPersonList(Predicate<ReadOnlyPerson> predicate) {
+            fail("This method should not be called.");
+        }
+
+        @Override
+        public UserPrefs getUserPrefs() {
+            fail("This method should not be called.");
+            return null;
+        }
+
+        @Override
+        public void recordSearchHistory() throws CommandException {
+            fail("This method should not be called.");
+        }
+```
+###### /java/seedu/address/logic/commands/AddCommandTest.java
+``` java
+        @Override
+        public void sortPersonListBySearchCount() {
+            fail("This method should not be called.");
+        }
+
+        @Override
+        public void sortPersonListLexicographically() {
+            fail("This method should not be called.");
+        }
+
+        @Override
+        public void authenticateAsanaUser() throws IOException, URISyntaxException {
+            fail("This method should not be called.");
+        }
+
+        @Override
+        public void checkAuthenticateAsanaUser() throws AsanaAuthenticationException {
+            fail("This method should not be called.");
+        }
+
+        @Override
+        public void storeAccessToken(String accessToken) throws IOException {
+            fail("This method should not be called.");
+        }
+
+```
+###### /java/seedu/address/logic/commands/AddMeetingCommandTest.java
+``` java
+public class AddMeetingCommandTest {
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
     @Test
-    public void display() throws Exception {
-        // default web page
-        URL expectedDefaultPageUrl = MainApp.class.getResource(FXML_FILE_FOLDER + DEFAULT_PAGE);
-        assertEquals(expectedDefaultPageUrl, browserPanelHandle.getLoadedUrl());
+    public void constructor_nullMeeting_throwsNullPointerException() {
+        thrown.expect(NullPointerException.class);
+        new AddMeetingCommand(null);
+    }
 
-        // associated linkedin page of a person
-        postNow(selectionChangedEventStub);
+    //successful meeting added without Asana configuration
+    @Test
+    public void execute_addMeeting_success() throws Exception {
+        ModelStubAcceptingMeetingAdded modelStub = new ModelStubAcceptingMeetingAdded();
 
-        String [] name = ALICE.getName().fullName.split(" ");
-        URL expectedPersonUrl = new URL(GOOGLE_SEARCH_URL_PREFIX
-                + ALICE.getName().fullName.replaceAll(" ", "+") + GOOGLE_SEARCH_URL_SUFFIX);
+        ArrayList<Index> ids = new ArrayList<>();
+        ids.add(Index.fromOneBased(1));
+        LocalDateTime localDateTime = LocalDateTime.of(2020, 10, 31, 18, 00);
 
-        waitUntilBrowserLoaded(browserPanelHandle);
-        //assertEquals(expectedPersonUrl, browserPanelHandle.getLoadedUrl());
+        CommandResult commandResult = getAddMeetingCommand(localDateTime, "Computing", "Project meeting",
+                ids, modelStub).execute();
+        assertEquals(AddMeetingCommand.MESSAGE_SUCCESS_ASANA_NO_CONFIG, commandResult.feedbackToUser);
+    }
+
+    //Duplicate meeting
+    @Test
+    public void execute_duplicateMeeting_throwsCommandException() throws Exception {
+        ModelStub modelStub = new ModelStubThrowingDuplicateMeetingException();
+
+        ArrayList<Index> ids = new ArrayList<>();
+        ids.add(Index.fromOneBased(1));
+        LocalDateTime localDateTime = LocalDateTime.of(2020, 10, 31, 18, 00);
+
+        thrown.expect(CommandException.class);
+        thrown.expectMessage(AddMeetingCommand.MESSAGE_DUPLICATE_MEETING);
+
+        getAddMeetingCommand(localDateTime, "NUS Computing", "CS2103", ids, modelStub).execute();
+    }
+
+    /**
+     * Generates a new AddMeetingCommand with the details of the given person.
+     */
+    private AddMeetingCommand getAddMeetingCommand (LocalDateTime dateTime, String location, String notes,
+                                                    ArrayList<Index> ids, Model model) {
+        AddMeetingCommand command = new AddMeetingCommand(dateTime, location, notes, ids);
+        command.setData(model, new CommandHistory(), new UndoRedoStack());
+        return command;
+    }
+
+
+    /**
+     * A default model stub that have all of the methods failing.
+     */
+    private class ModelStub implements Model {
+        @Override
+        public void addPerson(ReadOnlyPerson person) throws DuplicatePersonException {
+            fail("This method should not be called.");
+        }
+
+        @Override
+        public void resetData(ReadOnlyAddressBook newData, ReadOnlyMeetingList newMeetingData) {
+            fail("This method should not be called.");
+        }
+
+        @Override
+        public ReadOnlyAddressBook getAddressBook() {
+            fail("This method should not be called.");
+            return null;
+        }
+
+        @Override
+        public ReadOnlyMeetingList getMeetingList() {
+            fail("This method should not be called.");
+            return null;
+        }
+
+```
+###### /java/seedu/address/logic/commands/CommandTestUtil.java
+``` java
+    public static final String VALID_DATE = "31/10/2020";
+    public static final String VALID_TIME = "1800";
+    public static final String VALID_LOCATION = "Computing";
+    public static final String VALID_NOTES = "Project meeting";
+    public static final String VALID_PERSON = "2";
+    public static final String VALID_PERSON_VISIBLE = "2";
+
+    public static final String PAST_DATE = "31/10/1995";
+    public static final String INVALID_DATE = "12/11/198";
+
+```
+###### /java/seedu/address/logic/commands/CommandTestUtil.java
+``` java
+    public static final String DATE_VALID = " " + PREFIX_DATE + VALID_DATE;
+    public static final String TIME_VALID = " " + PREFIX_TIME + VALID_TIME;
+    public static final String LOCATION_1 = " " + PREFIX_LOCATION + VALID_LOCATION;
+    public static final String NOTES_1 = " " + PREFIX_NOTES + VALID_NOTES;
+    public static final String PERSON_1 = " " + PREFIX_PERSON + VALID_PERSON;
+
+    public static final String DATE_PAST = " " + PREFIX_DATE + PAST_DATE;
+    public static final String DATE_INVALID = " " + PREFIX_DATE + INVALID_DATE;
+
+    public static final String ADD_MEETING_INVALID_FORMAT = "Invalid command format! \n"
+            + "addMeeting: Adds a meeting to the address book. Parameters: on DATE from TIME at LOCATION about NOTES "
+            + "with PERSON 1 with PERSON 2 ...\n"
+            + "Example: addMeeting on 20/11/2017 from 1800 at UTown Starbucks about Project Meeting with 1";
+
+
+```
+###### /java/seedu/address/logic/commands/DeleteTagCommandTest.java
+``` java
+/***
+ * Focuses tests on model's deleteTag method, assumes DeleteTagCommandParser test handles tests for converting User
+ * input into type suitable for deleteTag method (i.e. String Array)
+ */
+public class DeleteTagCommandTest {
+
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
+    private Model model = new ModelManager(getTypicalAddressBook(), new UniqueMeetingList(), new UserPrefs());
+
+    @Test
+    public void constructor_nullArgument_throwsNullPointerException() {
+        thrown.expect(NullPointerException.class);
+        new DeleteTagCommand(null);
+    }
+
+    @Test
+    public void execute_deleteSingleTagSuccessful() throws Exception {
+
+        CommandResult commandResult = getDeleteTagCommand(SINGLE_TAG_DELETION, model).executeUndoableCommand();
+
+        assertEquals(String.format(DeleteTagCommand.MESSAGE_SUCCESS), commandResult.feedbackToUser);
+    }
+
+    @Test
+    public void execute_deleteMultipleTagSuccessful() throws Exception {
+
+        CommandResult commandResult = getDeleteTagCommand(MULTIPLE_TAG_DELETION, model).executeUndoableCommand();
+
+        assertEquals(String.format(DeleteTagCommand.MESSAGE_SUCCESS), commandResult.feedbackToUser);
+    }
+
+    @Test
+    public void execute_deleteSingleTag_tagDoesNotExist() throws Exception {
+
+        thrown.expect(CommandException.class);
+        thrown.expectMessage(DeleteTagCommand.MESSAGE_NO_TAGS_DELETED);
+
+        getDeleteTagCommand(TAG_DOES_NOT_EXIST, model).executeUndoableCommand();
+    }
+
+    /**
+     * Generates a new DeleteTagCommand for test
+     */
+    private DeleteTagCommand getDeleteTagCommand(String [] arg, Model model) {
+        DeleteTagCommand deleteTagCommand = new DeleteTagCommand(arg);
+        deleteTagCommand.setData(model, new CommandHistory(), new UndoRedoStack());
+        return deleteTagCommand;
+    }
+
+
+    @Test
+    public void equals() {
+        DeleteTagCommand deleteTagCommandOne = new DeleteTagCommand(SINGLE_TAG_DELETION);
+        DeleteTagCommand deleteTagCommandTwo = new DeleteTagCommand(SINGLE_TAG_DELETION_ALT);
+
+        // same object -> returns true
+        assertTrue(deleteTagCommandOne.equals(deleteTagCommandOne));
+
+        // same values -> returns true
+        DeleteTagCommand deleteTagCommandOneCopy = new DeleteTagCommand(SINGLE_TAG_DELETION);
+        assertTrue(deleteTagCommandOne.equals(deleteTagCommandOneCopy));
+
+        // different types -> returns false
+        assertFalse(deleteTagCommandOne.equals(1));
+
+        // null -> returns false
+        assertFalse(deleteTagCommandOne.equals(null));
+
+        // different person -> returns false
+        assertFalse(deleteTagCommandOne.equals(deleteTagCommandTwo));
+    }
+
+}
+```
+###### /java/seedu/address/logic/commands/FindCommandTest.java
+``` java
+    /***
+     * Ensures that with each successful find, the search count of the contact is updated by 1
+     */
+    @Test
+    public  void execute_recordStorage() {
+
+        int carlIndex = model.getFilteredPersonList().indexOf(CARL);
+
+        int countBeforeFind = Integer.parseInt(
+                model.getFilteredPersonList().get(carlIndex).getSearchData().getSearchCount());
+
+        FindCommand findCommand = prepareCommand("Carl");
+
+        try {
+            findCommand.execute();
+        } catch (CommandException e) {
+            e.printStackTrace();
+        }
+
+        int countAfterFind = Integer.parseInt(model.getFilteredPersonList().get(0).getSearchData().getSearchCount());
+        assertEquals(countBeforeFind + 1, countAfterFind);
+    }
+```
+###### /java/seedu/address/logic/commands/ListByMostSearchedCommandTest.java
+``` java
+/***
+ * Class of tests for ListByMostSearchedCommandTest
+ */
+public class ListByMostSearchedCommandTest {
+    private Model model;
+    private ListByMostSearchedCommand lmsCommand;
+
+    @Before
+    public void setUp() {
+        model = new ModelManager(getTypicalAddressBook(), new UniqueMeetingList(), new UserPrefs());
+
+        lmsCommand = new ListByMostSearchedCommand();
+        lmsCommand.setData(model, new CommandHistory(), new UndoRedoStack());
+
+    }
+
+    @Test
+    public void execute_listInDescendingSearchCount_verification() {
+        lmsCommand.executeUndoableCommand();
+
+        //In a list sorted in descending order of search count, SearchCountA refers to the search count A of the
+        //person higher up on the list with a supposed search Count greater or equals to the search count of person
+        //B who is lower in the list, with a lower search count
+        int searchCountA;
+        int searchCountB;
+
+        for (int i = 0; i < model.getFilteredPersonList().size(); i++) {
+            for (int j = i + 1; j < model.getFilteredPersonList().size(); j++) {
+                searchCountA = Integer.parseInt(model.getFilteredPersonList().get(j).getSearchData().getSearchCount());
+                searchCountB = Integer.parseInt(model.getFilteredPersonList().get(i).getSearchData().getSearchCount());
+                assertTrue(searchCountA <= searchCountB);
+            }
+        }
+
     }
 }
 ```
-###### /java/seedu/address/logic/parser/DeleteTagCommandParserTest.java
+###### /java/seedu/address/logic/commands/ListCommandTest.java
 ``` java
 /**
- * As we are only doing white-box testing, our test cases do not cover path variations
- * outside of the DeleteTagCommand code. For example, inputs "1" and "1 abc" take the
- * same path through the DeleteCommand, and therefore we test only one of them.
- * The path variation for those two cases occur inside the ParserUtil, and
- * therefore should be covered by the ParserUtilTest.
+ * Contains integration tests (interaction with the Model) and unit tests for ListCommand.
  */
-public class DeleteTagCommandParserTest {
+public class ListCommandTest {
 
-    private DeleteTagCommandParser parser = new DeleteTagCommandParser();
+    private Model model;
+    private Model expectedModel;
+    private ListCommand listCommand;
 
-    @Test
-    public void parse_validArgs_returnsDeleteCommand() {
-        //single entry
-        String [] arg = new String[]{"friends"};
-        assertParseSuccess(parser, "friends", new DeleteTagCommand(arg));
+    @Before
+    public void setUp() {
+        model = new ModelManager(getTypicalAddressBook(), new UniqueMeetingList(), new UserPrefs());
+        expectedModel = new ModelManager(model.getAddressBook(), new UniqueMeetingList(), new UserPrefs());
 
-        //multiple entries
-        String [] args = new String[] {"friends", "colleagues"};
-        assertParseSuccess(parser, "friends colleagues", new DeleteTagCommand(args));
-
-        //entries with space
-        String [] argsWithSpace = new String[] {"friends", "colleagues"};
-        assertParseSuccess(parser, "\n friends \n \t colleagues  \t", new DeleteTagCommand(argsWithSpace));
-
+        listCommand = new ListCommand();
+        listCommand.setData(model, new CommandHistory(), new UndoRedoStack());
     }
 
     @Test
-    public void parse_invalidArgs_throwsParseException() {
-        assertParseFailure(parser, "    ", String.format(MESSAGE_INVALID_COMMAND_FORMAT,
-                DeleteTagCommand.MESSAGE_USAGE));
+    public void execute_list_successfully() {
+        showFirstPersonOnly(model);
+        assertCommandSuccess(listCommand, model, ListCommand.MESSAGE_SUCCESS, expectedModel);
+    }
+
+    @Test
+    public void execute_listCheckAlphabeticalSequence() {
+        listCommand.executeUndoableCommand();
+
+        String personAFullName;
+        String personBFullName;
+
+        for (int i = 0; i < model.getFilteredPersonList().size(); i++) {
+            for (int j = i + 1; j < model.getFilteredPersonList().size(); j++) {
+                personAFullName = model.getFilteredPersonList().get(i).getName().fullName;
+                personBFullName = model.getFilteredPersonList().get(j).getName().fullName;
+                assertTrue(personAFullName.compareTo(personBFullName) <=  0);
+            }
+        }
+
     }
 }
 ```
@@ -179,28 +487,40 @@ public class AddMeetingCommandParserTest {
     }
 
 ```
-###### /java/seedu/address/logic/parser/SetUniqueKeyCommandParserTest.java
+###### /java/seedu/address/logic/parser/DeleteTagCommandParserTest.java
 ``` java
-public class SetUniqueKeyCommandParserTest {
-    private SetUniqueKeyCommandParser parser = new SetUniqueKeyCommandParser();
+/**
+ * As we are only doing white-box testing, our test cases do not cover path variations
+ * outside of the DeleteTagCommand code. For example, inputs "1" and "1 abc" take the
+ * same path through the DeleteCommand, and therefore we test only one of them.
+ * The path variation for those two cases occur inside the ParserUtil, and
+ * therefore should be covered by the ParserUtilTest.
+ */
+public class DeleteTagCommandParserTest {
+
+    private DeleteTagCommandParser parser = new DeleteTagCommandParser();
 
     @Test
-    public void parse_accessCode_success() {
-        String accessCode = "0/1e2345h78hy70";
+    public void parse_validArgs_returnsDeleteCommand() {
+        //single entry
+        String [] arg = new String[]{"friends"};
+        assertParseSuccess(parser, "friends", new DeleteTagCommand(arg));
 
-        assertParseSuccess(parser, accessCode,
-                new SetUniqueKeyCommand(accessCode));
+        //multiple entries
+        String [] args = new String[] {"friends", "colleagues"};
+        assertParseSuccess(parser, "friends colleagues", new DeleteTagCommand(args));
+
+        //entries with space
+        String [] argsWithSpace = new String[] {"friends", "colleagues"};
+        assertParseSuccess(parser, "\n friends \n \t colleagues  \t", new DeleteTagCommand(argsWithSpace));
 
     }
 
     @Test
-    public void parse_accessCode_failure() {
-        String accessCode = "gibberish";
-
-        assertParseFailure(parser, accessCode, "Please make sure the access code you have copied "
-                + "follows the format:\nDIGIT/ALPHANUMERICS");
+    public void parse_invalidArgs_throwsParseException() {
+        assertParseFailure(parser, "    ", String.format(MESSAGE_INVALID_COMMAND_FORMAT,
+                DeleteTagCommand.MESSAGE_USAGE));
     }
-
 }
 ```
 ###### /java/seedu/address/logic/parser/ParserUtilTest.java
@@ -358,369 +678,29 @@ public class SetUniqueKeyCommandParserTest {
 
 }
 ```
-###### /java/seedu/address/logic/commands/FindCommandTest.java
+###### /java/seedu/address/logic/parser/SetUniqueKeyCommandParserTest.java
 ``` java
-    /***
-     * Ensures that with each successful find, the search count of the contact is updated by 1
-     */
-    @Test
-    public  void execute_recordStorage() {
-
-        int carlIndex = model.getFilteredPersonList().indexOf(CARL);
-
-        int countBeforeFind = Integer.parseInt(
-                model.getFilteredPersonList().get(carlIndex).getSearchData().getSearchCount());
-
-        FindCommand findCommand = prepareCommand("Carl");
-
-        try {
-            findCommand.execute();
-        } catch (CommandException e) {
-            e.printStackTrace();
-        }
-
-        int countAfterFind = Integer.parseInt(model.getFilteredPersonList().get(0).getSearchData().getSearchCount());
-        assertEquals(countBeforeFind + 1, countAfterFind);
-    }
-```
-###### /java/seedu/address/logic/commands/DeleteTagCommandTest.java
-``` java
-/***
- * Focuses tests on model's deleteTag method, assumes DeleteTagCommandParser test handles tests for converting User
- * input into type suitable for deleteTag method (i.e. String Array)
- */
-public class DeleteTagCommandTest {
-
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
-    private Model model = new ModelManager(getTypicalAddressBook(), new UniqueMeetingList(), new UserPrefs());
+public class SetUniqueKeyCommandParserTest {
+    private SetUniqueKeyCommandParser parser = new SetUniqueKeyCommandParser();
 
     @Test
-    public void constructor_nullArgument_throwsNullPointerException() {
-        thrown.expect(NullPointerException.class);
-        new DeleteTagCommand(null);
+    public void parse_accessCode_success() {
+        String accessCode = "0/1e2345h78hy70";
+
+        assertParseSuccess(parser, accessCode,
+                new SetUniqueKeyCommand(accessCode));
+
     }
 
     @Test
-    public void execute_deleteSingleTagSuccessful() throws Exception {
+    public void parse_accessCode_failure() {
+        String accessCode = "gibberish";
 
-        CommandResult commandResult = getDeleteTagCommand(SINGLE_TAG_DELETION, model).executeUndoableCommand();
-
-        assertEquals(String.format(DeleteTagCommand.MESSAGE_SUCCESS), commandResult.feedbackToUser);
-    }
-
-    @Test
-    public void execute_deleteMultipleTagSuccessful() throws Exception {
-
-        CommandResult commandResult = getDeleteTagCommand(MULTIPLE_TAG_DELETION, model).executeUndoableCommand();
-
-        assertEquals(String.format(DeleteTagCommand.MESSAGE_SUCCESS), commandResult.feedbackToUser);
-    }
-
-    @Test
-    public void execute_deleteSingleTag_tagDoesNotExist() throws Exception {
-
-        thrown.expect(CommandException.class);
-        thrown.expectMessage(DeleteTagCommand.MESSAGE_NO_TAGS_DELETED);
-
-        getDeleteTagCommand(TAG_DOES_NOT_EXIST, model).executeUndoableCommand();
-    }
-
-    /**
-     * Generates a new DeleteTagCommand for test
-     */
-    private DeleteTagCommand getDeleteTagCommand(String [] arg, Model model) {
-        DeleteTagCommand deleteTagCommand = new DeleteTagCommand(arg);
-        deleteTagCommand.setData(model, new CommandHistory(), new UndoRedoStack());
-        return deleteTagCommand;
-    }
-
-
-    @Test
-    public void equals() {
-        DeleteTagCommand deleteTagCommandOne = new DeleteTagCommand(SINGLE_TAG_DELETION);
-        DeleteTagCommand deleteTagCommandTwo = new DeleteTagCommand(SINGLE_TAG_DELETION_ALT);
-
-        // same object -> returns true
-        assertTrue(deleteTagCommandOne.equals(deleteTagCommandOne));
-
-        // same values -> returns true
-        DeleteTagCommand deleteTagCommandOneCopy = new DeleteTagCommand(SINGLE_TAG_DELETION);
-        assertTrue(deleteTagCommandOne.equals(deleteTagCommandOneCopy));
-
-        // different types -> returns false
-        assertFalse(deleteTagCommandOne.equals(1));
-
-        // null -> returns false
-        assertFalse(deleteTagCommandOne.equals(null));
-
-        // different person -> returns false
-        assertFalse(deleteTagCommandOne.equals(deleteTagCommandTwo));
+        assertParseFailure(parser, accessCode, "Please make sure the access code you have copied "
+                + "follows the format:\nDIGIT/ALPHANUMERICS");
     }
 
 }
-```
-###### /java/seedu/address/logic/commands/ListByMostSearchedCommandTest.java
-``` java
-/***
- * Class of tests for ListByMostSearchedCommandTest
- */
-public class ListByMostSearchedCommandTest {
-    private Model model;
-    private ListByMostSearchedCommand lmsCommand;
-
-    @Before
-    public void setUp() {
-        model = new ModelManager(getTypicalAddressBook(), new UniqueMeetingList(), new UserPrefs());
-
-        lmsCommand = new ListByMostSearchedCommand();
-        lmsCommand.setData(model, new CommandHistory(), new UndoRedoStack());
-
-    }
-
-    @Test
-    public void execute_listInDescendingSearchCount_verification() {
-        lmsCommand.executeUndoableCommand();
-
-        //In a list sorted in descending order of search count, SearchCountA refers to the search count A of the
-        //person higher up on the list with a supposed search Count greater or equals to the search count of person
-        //B who is lower in the list, with a lower search count
-        int searchCountA;
-        int searchCountB;
-
-        for (int i = 0; i < model.getFilteredPersonList().size(); i++) {
-            for (int j = i + 1; j < model.getFilteredPersonList().size(); j++) {
-                searchCountA = Integer.parseInt(model.getFilteredPersonList().get(j).getSearchData().getSearchCount());
-                searchCountB = Integer.parseInt(model.getFilteredPersonList().get(i).getSearchData().getSearchCount());
-                assertTrue(searchCountA <= searchCountB);
-            }
-        }
-
-    }
-}
-```
-###### /java/seedu/address/logic/commands/ListCommandTest.java
-``` java
-/**
- * Contains integration tests (interaction with the Model) and unit tests for ListCommand.
- */
-public class ListCommandTest {
-
-    private Model model;
-    private Model expectedModel;
-    private ListCommand listCommand;
-
-    @Before
-    public void setUp() {
-        model = new ModelManager(getTypicalAddressBook(), new UniqueMeetingList(), new UserPrefs());
-        expectedModel = new ModelManager(model.getAddressBook(), new UniqueMeetingList(), new UserPrefs());
-
-        listCommand = new ListCommand();
-        listCommand.setData(model, new CommandHistory(), new UndoRedoStack());
-    }
-
-    @Test
-    public void execute_list_successfully() {
-        showFirstPersonOnly(model);
-        assertCommandSuccess(listCommand, model, ListCommand.MESSAGE_SUCCESS, expectedModel);
-    }
-
-    @Test
-    public void execute_listCheckAlphabeticalSequence() {
-        listCommand.executeUndoableCommand();
-
-        String personAFullName;
-        String personBFullName;
-
-        for (int i = 0; i < model.getFilteredPersonList().size(); i++) {
-            for (int j = i + 1; j < model.getFilteredPersonList().size(); j++) {
-                personAFullName = model.getFilteredPersonList().get(i).getName().fullName;
-                personBFullName = model.getFilteredPersonList().get(j).getName().fullName;
-                assertTrue(personAFullName.compareTo(personBFullName) <=  0);
-            }
-        }
-
-    }
-}
-```
-###### /java/seedu/address/logic/commands/AddMeetingCommandTest.java
-``` java
-public class AddMeetingCommandTest {
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
-    @Test
-    public void constructor_nullMeeting_throwsNullPointerException() {
-        thrown.expect(NullPointerException.class);
-        new AddMeetingCommand(null);
-    }
-
-    //successful meeting added without Asana configuration
-    @Test
-    public void execute_addMeeting_success() throws Exception {
-        ModelStubAcceptingMeetingAdded modelStub = new ModelStubAcceptingMeetingAdded();
-
-        ArrayList<Index> ids = new ArrayList<>();
-        ids.add(Index.fromOneBased(1));
-        LocalDateTime localDateTime = LocalDateTime.of(2020, 10, 31, 18, 00);
-
-        CommandResult commandResult = getAddMeetingCommand(localDateTime, "Computing", "Project meeting",
-                ids, modelStub).execute();
-        assertEquals(AddMeetingCommand.MESSAGE_SUCCESS_ASANA_NO_CONFIG, commandResult.feedbackToUser);
-    }
-
-    //Duplicate meeting
-    @Test
-    public void execute_duplicateMeeting_throwsCommandException() throws Exception {
-        ModelStub modelStub = new ModelStubThrowingDuplicateMeetingException();
-
-        ArrayList<Index> ids = new ArrayList<>();
-        ids.add(Index.fromOneBased(1));
-        LocalDateTime localDateTime = LocalDateTime.of(2020, 10, 31, 18, 00);
-
-        thrown.expect(CommandException.class);
-        thrown.expectMessage(AddMeetingCommand.MESSAGE_DUPLICATE_MEETING);
-
-        getAddMeetingCommand(localDateTime, "NUS Computing", "CS2103", ids, modelStub).execute();
-    }
-
-    /**
-     * Generates a new AddMeetingCommand with the details of the given person.
-     */
-    private AddMeetingCommand getAddMeetingCommand (LocalDateTime dateTime, String location, String notes,
-                                                    ArrayList<Index> ids, Model model) {
-        AddMeetingCommand command = new AddMeetingCommand(dateTime, location, notes, ids);
-        command.setData(model, new CommandHistory(), new UndoRedoStack());
-        return command;
-    }
-
-
-    /**
-     * A default model stub that have all of the methods failing.
-     */
-    private class ModelStub implements Model {
-        @Override
-        public void addPerson(ReadOnlyPerson person) throws DuplicatePersonException {
-            fail("This method should not be called.");
-        }
-
-        @Override
-        public void resetData(ReadOnlyAddressBook newData, ReadOnlyMeetingList newMeetingData) {
-            fail("This method should not be called.");
-        }
-
-        @Override
-        public ReadOnlyAddressBook getAddressBook() {
-            fail("This method should not be called.");
-            return null;
-        }
-
-        @Override
-        public ReadOnlyMeetingList getMeetingList() {
-            fail("This method should not be called.");
-            return null;
-        }
-
-```
-###### /java/seedu/address/logic/commands/CommandTestUtil.java
-``` java
-    public static final String VALID_DATE = "31/10/2020";
-    public static final String VALID_TIME = "1800";
-    public static final String VALID_LOCATION = "Computing";
-    public static final String VALID_NOTES = "Project meeting";
-    public static final String VALID_PERSON = "2";
-    public static final String VALID_PERSON_VISIBLE = "2";
-
-    public static final String PAST_DATE = "31/10/1995";
-    public static final String INVALID_DATE = "12/11/198";
-
-```
-###### /java/seedu/address/logic/commands/CommandTestUtil.java
-``` java
-    public static final String DATE_VALID = " " + PREFIX_DATE + VALID_DATE;
-    public static final String TIME_VALID = " " + PREFIX_TIME + VALID_TIME;
-    public static final String LOCATION_1 = " " + PREFIX_LOCATION + VALID_LOCATION;
-    public static final String NOTES_1 = " " + PREFIX_NOTES + VALID_NOTES;
-    public static final String PERSON_1 = " " + PREFIX_PERSON + VALID_PERSON;
-
-    public static final String DATE_PAST = " " + PREFIX_DATE + PAST_DATE;
-    public static final String DATE_INVALID = " " + PREFIX_DATE + INVALID_DATE;
-
-    public static final String ADD_MEETING_INVALID_FORMAT = "Invalid command format! \n"
-            + "addMeeting: Adds a meeting to the address book. Parameters: on DATE from TIME at LOCATION about NOTES "
-            + "with PERSON 1 with PERSON 2 ...\n"
-            + "Example: addMeeting on 20/11/2017 from 1800 at UTown Starbucks about Project Meeting with 1";
-
-
-```
-###### /java/seedu/address/logic/commands/AddCommandTest.java
-``` java
-        @Override
-        public void addMeeting(ReadOnlyMeeting meeting) throws DuplicateMeetingException, IllegalIdException {
-            fail("This method should not be called.");
-        }
-        //@author
-        @Override
-        public void updatePerson(ReadOnlyPerson target, ReadOnlyPerson editedPerson)
-                throws DuplicatePersonException {
-            fail("This method should not be called.");
-        }
-
-        @Override
-        public ObservableList<ReadOnlyPerson> getFilteredPersonList() {
-            fail("This method should not be called.");
-            return null;
-        }
-
-        @Override
-        public void updateFilteredPersonList() {
-            updateFilteredPersonList();
-        }
-
-        @Override
-        public void updateFilteredPersonList(Predicate<ReadOnlyPerson> predicate) {
-            fail("This method should not be called.");
-        }
-
-        @Override
-        public UserPrefs getUserPrefs() {
-            fail("This method should not be called.");
-            return null;
-        }
-
-        @Override
-        public void recordSearchHistory() throws CommandException {
-            fail("This method should not be called.");
-        }
-```
-###### /java/seedu/address/logic/commands/AddCommandTest.java
-``` java
-        @Override
-        public void sortPersonListBySearchCount() {
-            fail("This method should not be called.");
-        }
-
-        @Override
-        public void sortPersonListLexicographically() {
-            fail("This method should not be called.");
-        }
-
-        @Override
-        public void authenticateAsanaUser() throws IOException, URISyntaxException {
-            fail("This method should not be called.");
-        }
-
-        @Override
-        public void checkAuthenticateAsanaUser() throws AsanaAuthenticationException {
-            fail("This method should not be called.");
-        }
-
-        @Override
-        public void storeAccessToken(String accessToken) throws IOException {
-            fail("This method should not be called.");
-        }
-
 ```
 ###### /java/seedu/address/testutil/PersonBuilder.java
 ``` java
@@ -746,6 +726,26 @@ public class TypicalTags {
     public static final String [] SINGLE_TAG_DELETION_ALT = new String [] {"colleagues"};
     public static final String [] MULTIPLE_TAG_DELETION = new String [] {"friends", "colleagues"};
     public static final String [] TAG_DOES_NOT_EXIST = new String[] {"blahblah"};
+}
+```
+###### /java/seedu/address/ui/BrowserPanelTest.java
+``` java
+    @Test
+    public void display() throws Exception {
+        // default web page
+        URL expectedDefaultPageUrl = MainApp.class.getResource(FXML_FILE_FOLDER + DEFAULT_PAGE);
+        assertEquals(expectedDefaultPageUrl, browserPanelHandle.getLoadedUrl());
+
+        // associated linkedin page of a person
+        postNow(selectionChangedEventStub);
+
+        String [] name = ALICE.getName().fullName.split(" ");
+        URL expectedPersonUrl = new URL(GOOGLE_SEARCH_URL_PREFIX
+                + ALICE.getName().fullName.replaceAll(" ", "+") + GOOGLE_SEARCH_URL_SUFFIX);
+
+        waitUntilBrowserLoaded(browserPanelHandle);
+        //assertEquals(expectedPersonUrl, browserPanelHandle.getLoadedUrl());
+    }
 }
 ```
 ###### /java/systemtests/AddressBookSystemTest.java
