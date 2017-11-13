@@ -120,7 +120,7 @@ public class Meeting implements ReadOnlyMeeting {
     }
 
     /**
-     * Returns the state of the Meeting as string for viewing.
+     * Returns the state of the eeting as text for viewing.
      */
     public String toString() {
         return "Date: " + dateTime.format(DATE_FORMATTER) + "  Time: " + dateTime.format(TIME_FORMATTER) + '\n'

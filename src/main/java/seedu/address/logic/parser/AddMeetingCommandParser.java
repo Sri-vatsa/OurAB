@@ -13,12 +13,10 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.stream.Stream;
 
+import seedu.address.commons.core.index.Index;
 import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.logic.commands.AddMeetingCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
-import seedu.address.model.Meeting;
-import seedu.address.model.ReadOnlyMeeting;
-import seedu.address.model.person.InternalId;
 
 //@@author Sri-vatsa
 /**
@@ -43,15 +41,13 @@ public class AddMeetingCommandParser implements Parser<AddMeetingCommand>  {
         try {
             String location = ParserUtil.parseLocation(argMultimap.getValue(PREFIX_LOCATION)).get();
             String notes = ParserUtil.parseNotes(argMultimap.getValue(PREFIX_NOTES)).get();
-            ArrayList<InternalId> idList = ParserUtil.parseIds(argMultimap.getAllValues(PREFIX_PERSON));
+            ArrayList<Index> idList = ParserUtil.parseIds(argMultimap.getAllValues(PREFIX_PERSON));
 
             String date = ParserUtil.parseDate(argMultimap.getValue(PREFIX_DATE)).get();
             String time = ParserUtil.parseTime(argMultimap.getValue(PREFIX_TIME)).get();
             LocalDateTime localDateTime = ParserUtil.parseDateTime(date, time);
 
-            ReadOnlyMeeting meeting = new Meeting(localDateTime, location, notes, idList);
-
-            return new AddMeetingCommand(meeting);
+            return new AddMeetingCommand(localDateTime, location, notes, idList);
         } catch (IllegalValueException ive) {
             throw new ParseException(ive.getMessage(), ive);
         }

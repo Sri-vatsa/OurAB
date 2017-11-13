@@ -27,6 +27,7 @@ public class MeetingListChangedEvent extends BaseEvent {
     public static final String LINKEDIN_SEARCH_PARAM_FIRST_NAME = "&firstName=";
     public static final String LINKEDIN_SEARCH_PARAM_LAST_NAME = "&lastName=";
     public static final String LINKEDIN_URL_SUFFIX = "&origin=FACETED_SEARCH";
+
 ```
 ###### /java/seedu/address/ui/BrowserPanel.java
 ``` java
@@ -181,15 +182,13 @@ public class AddMeetingCommandParser implements Parser<AddMeetingCommand>  {
         try {
             String location = ParserUtil.parseLocation(argMultimap.getValue(PREFIX_LOCATION)).get();
             String notes = ParserUtil.parseNotes(argMultimap.getValue(PREFIX_NOTES)).get();
-            ArrayList<InternalId> idList = ParserUtil.parseIds(argMultimap.getAllValues(PREFIX_PERSON));
+            ArrayList<Index> idList = ParserUtil.parseIds(argMultimap.getAllValues(PREFIX_PERSON));
 
             String date = ParserUtil.parseDate(argMultimap.getValue(PREFIX_DATE)).get();
             String time = ParserUtil.parseTime(argMultimap.getValue(PREFIX_TIME)).get();
             LocalDateTime localDateTime = ParserUtil.parseDateTime(date, time);
 
-            ReadOnlyMeeting meeting = new Meeting(localDateTime, location, notes, idList);
-
-            return new AddMeetingCommand(meeting);
+            return new AddMeetingCommand(localDateTime, location, notes, idList);
         } catch (IllegalValueException ive) {
             throw new ParseException(ive.getMessage(), ive);
         }
@@ -316,15 +315,15 @@ public class DeleteTagCommandParser implements Parser<DeleteTagCommand>  {
     }
 
     /**
-     * Parses {@code Collection<String> ids} into a {@code Set<InternalIds>}.
+     * Parses {@code Collection<String> ids} into a {@code ArrayList<Index>}.
      */
-    public static ArrayList<InternalId> parseIds(Collection<String> ids) throws IllegalValueException {
+    public static ArrayList<Index> parseIds(Collection<String> ids) throws IllegalValueException {
         requireNonNull(ids);
-        final ArrayList<InternalId> idSet = new ArrayList<>();
+        final ArrayList<Index> idSet = new ArrayList<>();
 
         try {
             for (String id : ids) {
-                idSet.add(new InternalId(Integer.parseInt(id)));
+                idSet.add(parseIndex(id));
             }
         } catch (NumberFormatException nfe) {
             throw new IllegalValueException("Please make sure teh person id is a valid number");
@@ -414,7 +413,7 @@ public class SetUniqueKeyCommandParser implements Parser<SetUniqueKeyCommand> {
 /**
  * Adds a new meeting to the address book.
  */
-public class AddMeetingCommand extends Command {
+public class AddMeetingCommand extends UndoableCommand {
 
     public static final String COMMAND_WORD = "addMeeting";
     public static final String COMMAND_ALIAS = "am";
@@ -445,6 +444,7 @@ public class AddMeetingCommand extends Command {
             + "Setup Asana to post the meeting on Asana.";
     public static final String MESSAGE_SUCCESS_LOCAL = "New meeting added locally!\n"
             + "Connect to the internet and setup Asana to post a meeting on Asana.";
+    public static final String MESSAGE_ERROR_INVALID_INDEX = "Person with index %1$d not found.\n";
     public static final String MESSAGE_DUPLICATE_MEETING = "This meeting already exists in the address book";
     public static final String MESSAGE_INVALID_ID = "Please input a valid person id!";
     public static final String MESSAGE_TEMPLATE = COMMAND_WORD + " "
@@ -455,16 +455,36 @@ public class AddMeetingCommand extends Command {
             + PREFIX_PERSON + "PERSON ...";
 
 
-    private final Meeting toAdd;
+    private Meeting toAdd;
+    private LocalDateTime localDateTime;
+    private String location;
+    private String notes;
+    private ArrayList<Index> idList;
 
     public AddMeetingCommand(ReadOnlyMeeting meeting) {
         toAdd = new Meeting(meeting);
     }
 
+    public AddMeetingCommand(LocalDateTime localDateTime, String location, String notes, ArrayList<Index> idList) {
+        this.localDateTime = localDateTime;
+        this.location = location;
+        this.notes = notes;
+        this.idList = idList;
+    }
 
     @Override
-    public CommandResult execute() throws CommandException {
+    public CommandResult executeUndoableCommand() throws CommandException {
         requireNonNull(model);
+
+        ArrayList<InternalId> internalIds = null;
+        try {
+            internalIds = convertVisibleIdsToInternal(this.idList);
+        } catch (IllegalValueException e) {
+            throw new CommandException(String.format(e.getMessage()));
+        }
+
+        toAdd = new Meeting(localDateTime, location, notes, internalIds);
+
         AsanaCredentials asanaCredentials = new AsanaCredentials();
 
         //if there is internet connection && asana is configured
@@ -518,7 +538,10 @@ public class AddMeetingCommand extends Command {
     public boolean equals(Object other) {
         return other == this // short circuit if same object
                 || (other instanceof AddMeetingCommand // instanceof handles nulls
-                && toAdd.equals(((AddMeetingCommand) other).toAdd));
+                && Objects.equals(this.location, ((AddMeetingCommand) other).location))
+                && this.notes.equals(((AddMeetingCommand) other).notes)
+                && this.localDateTime.equals(((AddMeetingCommand) other).localDateTime)
+                && this.idList.equals(((AddMeetingCommand) other).idList);
     }
 
     /**
@@ -541,7 +564,7 @@ public class AddMeetingCommand extends Command {
             }
         }
     }
-}
+
 ```
 ###### /java/seedu/address/logic/commands/SetupAsanaCommand.java
 ``` java
@@ -565,10 +588,7 @@ public class SetupAsanaCommand extends Command {
 
         try {
 
-            new AuthenticateAsanaUser();
-
-            AsanaCredentials asanaCredentials = new AsanaCredentials();
-            asanaCredentials.setIsAsanaConfigured(CONFIGURED);
+            model.authenticateAsanaUser();
 
         } catch (URISyntaxException e) {
             throw new CommandException("Failed to redirect to Asana's page. Please try again later!");
@@ -605,7 +625,7 @@ public class SetUniqueKeyCommand extends Command {
     public CommandResult execute() throws CommandException {
 
         try {
-            new StoreAccessToken(userAccessCode);
+            model.storeAccessToken(userAccessCode);
         } catch (IOException e) {
             throw new CommandException("Please try again with a valid code from Asana");
         } catch (IllegalArgumentException iae) {
@@ -620,6 +640,94 @@ public class SetUniqueKeyCommand extends Command {
         return other == this // short circuit if same object
                 || (other instanceof SetUniqueKeyCommand // instanceof handles nulls
                 && this.userAccessCode.equals(((SetUniqueKeyCommand) other).userAccessCode)); // state check
+    }
+
+}
+```
+###### /java/seedu/address/logic/commands/PostTask.java
+``` java
+/***
+ * Posts a task onto users meeting project on Asana
+ */
+@Ignore
+public class PostTask extends Command {
+
+    private String notes;
+    private String date;
+
+    public PostTask(String notes, String localDate) throws ParseException {
+        this.notes = notes;
+        this.date = dateFormatter(localDate);
+    }
+    @Override
+    public CommandResult execute() throws CommandException {
+
+        Client client;
+        try {
+            model.checkAuthenticateAsanaUser();
+            client = Client.accessToken((new AsanaCredentials()).getAccessToken());
+            //get user data
+            User user = client.users.me().execute();
+
+            // find user's "Personal Projects" project //default asana personal workspace
+            Workspace meetingsWorkspace = null;
+            for (Workspace workspace : client.workspaces.findAll()) {
+                if (workspace.name.equals("Personal Projects")) {
+                    meetingsWorkspace = workspace;
+                    break;
+                }
+            }
+
+            if (meetingsWorkspace == null) {
+                throw new CommandException("Please create a workspace called "
+                        + "\"Personal Projects\" in your Asana account");
+            }
+
+            // create a "Meetings" if it doesn't exist
+            List<Project> projects = client.projects.findByWorkspace(meetingsWorkspace.id).execute();
+            Project myMeetings = null;
+            for (Project project : projects) {
+                if (project.name.equals("Meetings")) {
+                    myMeetings = project;
+                    break;
+                }
+            }
+            if (myMeetings == null) {
+                myMeetings = client.projects.createInWorkspace(meetingsWorkspace.id)
+                        .data("name", "Meetings")
+                        .execute();
+            }
+
+            // create a task in the project
+            client.tasks.createInWorkspace(meetingsWorkspace.id)
+                    .data("name", notes)
+                    .data("projects", Arrays.asList(myMeetings.id))
+                    .data("due_on", date)
+                    .data("assignee", user)
+                    .execute();
+
+        } catch (IOException io) {
+            throw new CommandException("Please setup Asana again!");
+        } catch (AsanaAuthenticationException e) {
+            throw new CommandException(e.getMessage());
+        }
+
+        return new CommandResult("");
+    }
+
+    /**
+     * Formats date to suit input needs of Asana API
+     */
+    private String dateFormatter (String date) throws ParseException {
+
+        DateFormat dateParse = new SimpleDateFormat("yyyy/mm/dd");
+
+        Date formattedDate = dateParse.parse(date);
+
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd");
+
+        return dateFormat.format(formattedDate);
+
     }
 
 }
@@ -690,7 +798,7 @@ public class DeleteTagCommand extends UndoableCommand {
         if (hasOneOrMoreDeletion) {
             return new CommandResult(String.format(MESSAGE_SUCCESS));
         } else {
-            return new CommandResult(String.format(MESSAGE_NO_TAGS_DELETED));
+            throw new CommandException(MESSAGE_NO_TAGS_DELETED);
         }
     }
 
@@ -774,61 +882,6 @@ public class ListByMostSearchedCommand extends UndoableCommand {
         }
     }
 
-    //@@liuhang0213
-    /**
-     * Returns the meeting with earliest date in the internal list
-     * Currently not checking if it is happening in the future
-     */
-    @Override
-    public ReadOnlyMeeting getUpcomingMeeting() {
-        this.sortByDate();
-        return internalList.get(0);
-    }
-
-    public ObservableList<ReadOnlyMeeting> getInternalList() {
-        return internalList;
-    }
-
-    @Override
-    public Iterator<ReadOnlyMeeting> iterator() {
-        assert CollectionUtil.elementsAreUnique(internalList);
-        return internalList.iterator();
-    }
-
-    /**
-     * Returns the backing list as an unmodifiable {@code ObservableList}.
-     */
-    public ObservableList<ReadOnlyMeeting> asObservableList() {
-        assert CollectionUtil.elementsAreUnique(internalList);
-        return FXCollections.unmodifiableObservableList(internalList);
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        assert CollectionUtil.elementsAreUnique(internalList);
-        return other == this // short circuit if same object
-                || (other instanceof UniqueMeetingList // instanceof handles nulls
-                        && this.internalList.equals(((UniqueMeetingList) other).internalList));
-    }
-
-    /**
-     * Returns true if the element in this list is equal to the elements in {@code other}.
-     * The elements do not have to be in the same order.
-     */
-    public boolean equalsOrderInsensitive(UniqueMeetingList other) {
-        assert CollectionUtil.elementsAreUnique(internalList);
-        assert CollectionUtil.elementsAreUnique(other.internalList);
-        return this == other || new HashSet<>(this.internalList).equals(new HashSet<>(other.internalList));
-    }
-
-    @Override
-    public int hashCode() {
-        assert CollectionUtil.elementsAreUnique(internalList);
-        return internalList.hashCode();
-    }
-
-
-}
 ```
 ###### /java/seedu/address/model/ReadOnlyMeeting.java
 ``` java
@@ -1134,6 +1187,23 @@ public class IllegalIdException extends IllegalValueException {
         updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);
         indicateAddressBookChanged();
     }
+
+    //=========== Asana methods =============================================================
+
+    @Override
+    public void authenticateAsanaUser() throws IOException, URISyntaxException {
+        new AuthenticateAsanaUser();
+    }
+
+    @Override
+    public void checkAuthenticateAsanaUser() throws AsanaAuthenticationException {
+        new CheckAuthenticateAsanaUser();
+    }
+
+    @Override
+    public void storeAccessToken(String accessToken) throws IOException {
+        new StoreAccessToken(accessToken);
+    }
 ```
 ###### /java/seedu/address/model/asana/StoreAccessToken.java
 ``` java
@@ -1164,94 +1234,6 @@ public class StoreAccessToken {
         }
 
         return accessToken;
-    }
-
-}
-```
-###### /java/seedu/address/model/asana/PostTask.java
-``` java
-/***
- * Posts a task onto users meeting project on Asana
- */
-@Ignore
-public class PostTask extends Command {
-
-    private String notes;
-    private String date;
-
-    public PostTask(String notes, String localDate) throws ParseException {
-        this.notes = notes;
-        this.date = dateFormatter(localDate);
-    }
-    @Override
-    public CommandResult execute() throws CommandException {
-
-        Client client;
-        try {
-            new CheckAuthenticateAsanaUser();
-            client = Client.accessToken((new AsanaCredentials()).getAccessToken());
-            //get user data
-            User user = client.users.me().execute();
-
-            // find user's "Personal Projects" project //default asana personal workspace
-            Workspace meetingsWorkspace = null;
-            for (Workspace workspace : client.workspaces.findAll()) {
-                if (workspace.name.equals("Personal Projects")) {
-                    meetingsWorkspace = workspace;
-                    break;
-                }
-            }
-
-            if (meetingsWorkspace == null) {
-                throw new CommandException("Please create a workspace called "
-                        + "\"Personal Projects\" in your Asana account");
-            }
-
-            // create a "Meetings" if it doesn't exist
-            List<Project> projects = client.projects.findByWorkspace(meetingsWorkspace.id).execute();
-            Project myMeetings = null;
-            for (Project project : projects) {
-                if (project.name.equals("Meetings")) {
-                    myMeetings = project;
-                    break;
-                }
-            }
-            if (myMeetings == null) {
-                myMeetings = client.projects.createInWorkspace(meetingsWorkspace.id)
-                        .data("name", "Meetings")
-                        .execute();
-            }
-
-            // create a task in the project
-            client.tasks.createInWorkspace(meetingsWorkspace.id)
-                    .data("name", notes)
-                    .data("projects", Arrays.asList(myMeetings.id))
-                    .data("due_on", date)
-                    .data("assignee", user)
-                    .execute();
-
-        } catch (IOException io) {
-            throw new CommandException("Please setup Asana again!");
-        } catch (AsanaAuthenticationException e) {
-            throw new CommandException(e.getMessage());
-        }
-
-        return new CommandResult("");
-    }
-
-    /**
-     * Formats date to suit input needs of Asana API
-     */
-    private String dateFormatter (String date) throws ParseException {
-
-        DateFormat dateParse = new SimpleDateFormat("yyyy/mm/dd");
-
-        Date formattedDate = dateParse.parse(date);
-
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd");
-
-        return dateFormat.format(formattedDate);
-
     }
 
 }
@@ -1301,7 +1283,7 @@ public class AuthenticateAsanaUser {
 
         //open browser on desktop for authentication purpose --> Asana to show authorisation key
         Desktop.getDesktop().browse(new URI(url));
-
+        asanaCredentials.setIsAsanaConfigured(CONFIGURED);
     }
 }
 ```
@@ -1329,6 +1311,21 @@ public class AuthenticateAsanaUser {
      * Sort everyone in addressbook lexicographically
      */
     void sortPersonListLexicographically();
+
+    /**
+     * Authenticate asana user
+     */
+    void authenticateAsanaUser() throws IOException, URISyntaxException;
+
+    /**
+     * Checks if asana user is authenticated
+     */
+    void checkAuthenticateAsanaUser() throws AsanaAuthenticationException;
+
+    /**
+     * Store accessToken
+     */
+    void storeAccessToken(String accessToken) throws IOException;
 
 ```
 ###### /java/seedu/address/model/AddressBook.java
@@ -1361,9 +1358,6 @@ public class AsanaCredentials {
     private static boolean isAsanaConfigured = false;
     private static String hashedToken;
 
-    public AsanaCredentials() {
-        hashedToken = null;
-    }
 
     /**
      * Getter method for Access token

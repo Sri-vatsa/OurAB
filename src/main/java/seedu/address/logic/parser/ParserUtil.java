@@ -18,7 +18,6 @@ import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.commons.util.StringUtil;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
-import seedu.address.model.person.InternalId;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Phone;
 import seedu.address.model.tag.Tag;
@@ -187,15 +186,15 @@ public class ParserUtil {
     }
 
     /**
-     * Parses {@code Collection<String> ids} into a {@code Set<InternalIds>}.
+     * Parses {@code Collection<String> ids} into a {@code ArrayList<Index>}.
      */
-    public static ArrayList<InternalId> parseIds(Collection<String> ids) throws IllegalValueException {
+    public static ArrayList<Index> parseIds(Collection<String> ids) throws IllegalValueException {
         requireNonNull(ids);
-        final ArrayList<InternalId> idSet = new ArrayList<>();
+        final ArrayList<Index> idSet = new ArrayList<>();
 
         try {
             for (String id : ids) {
-                idSet.add(new InternalId(Integer.parseInt(id)));
+                idSet.add(parseIndex(id));
             }
         } catch (NumberFormatException nfe) {
             throw new IllegalValueException("Please make sure teh person id is a valid number");

@@ -5,10 +5,13 @@ import java.net.URISyntaxException;
 import java.util.function.Predicate;
 
 import javafx.collections.ObservableList;
+import seedu.address.commons.core.index.Index;
+import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.exceptions.AsanaAuthenticationException;
 import seedu.address.model.exceptions.DuplicateMeetingException;
 import seedu.address.model.exceptions.IllegalIdException;
+import seedu.address.model.person.InternalId;
 import seedu.address.model.person.ReadOnlyPerson;
 import seedu.address.model.person.exceptions.DuplicatePersonException;
 import seedu.address.model.person.exceptions.PersonNotFoundException;
@@ -28,6 +31,15 @@ public interface Model {
 
     /** Returns the meeting list */
     ReadOnlyMeetingList getMeetingList();
+
+    //@@author liuhang0213
+    /**
+     * Converts a visible index to the corresponding internal id of the person
+     * @param visibleId
+     * @return InternalId of the person
+     */
+    InternalId visibleToInternalId(Index visibleId) throws IllegalValueException;
+    //@@author
 
     /** Deletes the given person. */
     void deletePerson(ReadOnlyPerson target) throws PersonNotFoundException;

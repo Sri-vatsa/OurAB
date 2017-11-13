@@ -85,6 +85,17 @@ public class NextMeetingCommandTest {
     }
 }
 ```
+###### /java/seedu/address/logic/commands/AddMeetingCommandTest.java
+``` java
+        @Override
+        /**
+         * Returns an internal id identical to visible id
+         */
+        public InternalId visibleToInternalId(Index visibleId) throws IllegalValueException {
+            return new InternalId(visibleId.getOneBased());
+        }
+
+```
 ###### /java/seedu/address/logic/commands/PrefCommandTest.java
 ``` java
 /**

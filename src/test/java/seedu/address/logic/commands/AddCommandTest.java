@@ -16,6 +16,8 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import javafx.collections.ObservableList;
+import seedu.address.commons.core.index.Index;
+import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.logic.CommandHistory;
 import seedu.address.logic.UndoRedoStack;
 import seedu.address.logic.commands.exceptions.CommandException;
@@ -29,6 +31,7 @@ import seedu.address.model.UserPrefs;
 import seedu.address.model.exceptions.AsanaAuthenticationException;
 import seedu.address.model.exceptions.DuplicateMeetingException;
 import seedu.address.model.exceptions.IllegalIdException;
+import seedu.address.model.person.InternalId;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.ReadOnlyPerson;
 import seedu.address.model.person.exceptions.DuplicatePersonException;
@@ -124,6 +127,12 @@ public class AddCommandTest {
 
         @Override
         public ReadOnlyMeetingList getMeetingList() {
+            fail("This method should not be called.");
+            return null;
+        }
+
+        @Override
+        public InternalId visibleToInternalId(Index visibleId) throws IllegalValueException {
             fail("This method should not be called.");
             return null;
         }

@@ -849,9 +849,9 @@ A profile photo is displayed for each person in the addressbook.
 
 ==== Implementation
 
-During startup, the application uses a person's email address to download his/her profile photo from link:https://en.gravatar.com/site/implement/[Gravatar] `cache/`. The photo will then be displayed on the person card.
+During initialization, the application uses a person's email address to download his/her profile photo from link:https://en.gravatar.com/site/implement/[Gravatar] to `cache/`. The photo will then be displayed on the person card.
 When a new person is added or a person's email address is changed, the new profile photo will be downloaded. +
-For contacts who have not set a Gravatar photo before, user also has the option to choose what type of default photo to
+For persons who have not set a Gravatar photo before, user also has the option to choose what type of default photo to
 display.
 
 ==== Design Considerations
@@ -861,13 +861,13 @@ display.
 **Pros:** easy to implement; does not require user to input extra information +
 **Cons:** less customizable +
 **Alternative 2:** from other social network websites (Instagram, Facebook, etc.) +
-**Pros:** OurAb's target demographics usually update their profile photos on SNS more frequently +
+**Pros:** OurAB's target demographics usually update their profile photos on SNS more frequently +
 **Cons:** authentication might be required; User need to input contacts' user id for different websites +
 **Alternative 3:** user uploads profile photo for each person +
 **Pros:** user has most freedom to customize their addressbook +
 **Cons:** upload photo would be too complicated for a CLI application +
 
-**Aspect:** download photos in foreground or background+
+**Aspect:** download photos in foreground or background +
 **Alternative 1 (current choice):** only download in background when the `DefaultProfilePhoto` preference is changed +
 **Pros:** the solution is balanced between program response time and update time (see below for explanation on the trade-off) +
 **Cons:** user might not see the change immediately after changing the preference +

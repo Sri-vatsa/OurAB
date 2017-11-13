@@ -9,6 +9,9 @@ import static seedu.address.logic.commands.CommandTestUtil.NOTES_1;
 import static seedu.address.logic.commands.CommandTestUtil.PERSON_1;
 import static seedu.address.logic.commands.CommandTestUtil.TIME_VALID;
 
+import static seedu.address.logic.commands.CommandTestUtil.VALID_LOCATION;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_NOTES;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_PERSON_VISIBLE;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 
@@ -17,27 +20,23 @@ import java.util.ArrayList;
 
 import org.junit.Test;
 
+import seedu.address.commons.core.index.Index;
 import seedu.address.commons.exceptions.IllegalValueException;
 
 import seedu.address.logic.commands.AddMeetingCommand;
-
-import seedu.address.model.Meeting;
-
-import seedu.address.model.person.InternalId;
 
 //@@author Sri-vatsa
 public class AddMeetingCommandParserTest {
     private AddMeetingCommandParser parser = new AddMeetingCommandParser();
     @Test
     public void parse_allFieldsPresent_success() throws IllegalValueException {
-        ArrayList<InternalId> ids = new ArrayList<>();
-        ids.add(new InternalId(2));
+        ArrayList<Index> ids = new ArrayList<>();
+        ids.add(ParserUtil.parseIndex(VALID_PERSON_VISIBLE));
         LocalDateTime localDateTime = LocalDateTime.of(2020, 10, 31, 18, 00);
-        Meeting expectedMeeting = new Meeting(localDateTime, "Computing", "Project meeting", ids);
 
         // Add meeting successfully
         assertParseSuccess(parser, AddMeetingCommand.COMMAND_WORD + DATE_VALID + TIME_VALID + LOCATION_1
-                + NOTES_1 + PERSON_1, new AddMeetingCommand(expectedMeeting));
+                + NOTES_1 + PERSON_1, new AddMeetingCommand(localDateTime, VALID_LOCATION, VALID_NOTES, ids));
     }
 
     //meeting date is in the past
