@@ -13,7 +13,6 @@ import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.ReadOnlyMeetingList;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.ReadOnlyPerson;
-import seedu.address.storage.asana.storage.AsanaCredentials;
 
 /**
  * API of the Storage component
