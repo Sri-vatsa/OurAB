@@ -39,7 +39,7 @@ e.g. entering "l" will also return a list of persons in the address book
 To make it more convenient for experienced users, who will be able to use the address book more efficiently once they are familiar with
 the shortcuts. Users can refer to the user guide for the list of the command shortcuts.
 
-[https://github.com/CS2103AUG2017-F09-B4/main/blob/master/docs/UserGuide.adoc[from: command-summary]]#
+[https://github.com/CS2103AUG2017-F09-B4/main/blob/master/docs/UserGuide.adoc[from: command-summary]]
 
 ---
 
@@ -191,6 +191,12 @@ the google maps on the browser panel
 ---
 
 #End of Extract#
----
+
+=== Enhancement Proposed:
+
+* Using google calendar api (discarded)
 
 === Other contributions
+
+* Integrate and deconflict display modes into choose command
+* Updated error handling for ChooseCommand
