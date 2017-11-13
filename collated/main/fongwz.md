@@ -551,9 +551,13 @@ public class CommandBoxHelper extends UiPart<Region> {
      * Called when user presses down key on command helper
      */
     public void selectDownHelperBox() {
-        if (!commandBoxHelperList.getSelectionModel().isSelected(0)) {
+        if (commandBoxHelperList.getSelectionModel().getSelectedItem() == null
+                || commandBoxHelperList.getSelectionModel().getSelectedIndex()
+                == commandBoxHelperList.getItems().size() - 1) {
             commandBoxHelperList.getSelectionModel().selectFirst();
+            commandBoxHelperList.scrollTo(0);
         } else {
+            commandBoxHelperList.scrollTo(commandBoxHelperList.getSelectionModel().getSelectedIndex() + 1);
             commandBoxHelperList.getSelectionModel().select(
                     commandBoxHelperList.getSelectionModel().getSelectedIndex() + 1);
         }
@@ -563,9 +567,18 @@ public class CommandBoxHelper extends UiPart<Region> {
      * Called when user presses up key on command helper
      */
     public void selectUpHelperBox() {
-        if (!commandBoxHelperList.getSelectionModel().isSelected(0)) {
+        if (commandBoxHelperList.getSelectionModel().getSelectedItem() == null) {
             commandBoxHelperList.getSelectionModel().selectFirst();
+            commandBoxHelperList.scrollTo(0);
+        } else if (commandBoxHelperList.getSelectionModel().getSelectedIndex() == 0) {
+            commandBoxHelperList.getSelectionModel().selectLast();
+            commandBoxHelperList.scrollTo(
+                    commandBoxHelperList.getItems().size() - 1
+            );
         } else {
+            commandBoxHelperList.scrollTo(
+                    commandBoxHelperList.getSelectionModel().getSelectedIndex() - 1
+            );
             commandBoxHelperList.getSelectionModel().select(
                     commandBoxHelperList.getSelectionModel().getSelectedIndex() - 1);
         }
@@ -944,15 +957,15 @@ public class HelperCard extends UiPart<Region> {
     @Override
     public ArrayList<String> getMeetingNames(ReadOnlyMeeting meeting) {
         ArrayList<String> nameList = new ArrayList<>();
-        try {
-            for (InternalId id : meeting.getListOfPersonsId()) {
+        for (InternalId id : meeting.getListOfPersonsId()) {
+            try {
                 nameList.add(model.getAddressBook().getPersonByInternalIndex(id.getId()).getName().fullName);
+            } catch (PersonNotFoundException e) {
+                logger.warning(String.format("Person with index %1$d not found. Entry was probably deleted.",
+                        id.getId()));
             }
-            return nameList;
-        } catch (PersonNotFoundException e) {
-            logger.info(e.getMessage());
-            return nameList;
         }
+        return nameList;
     }
 ```
 ###### /java/seedu/address/logic/parser/ChooseCommandParser.java
@@ -1023,18 +1036,19 @@ public class ChooseCommand extends Command {
     @Override
     public CommandResult execute() throws CommandException {
 
-        if (Selection.getSelectionStatus() == false) {
+        if (Selection.getSelectionStatus() == false && !targetDisplay.equals("meeting")) {
             throw new CommandException(Messages.MESSAGE_PERSON_NOT_SELECTED);
         }
 
         if (targetDisplay.equals("meeting")) {
             EventsCenter.getInstance().post(new ShowMeetingEvent());
             EventsCenter.getInstance().post(new JumpToBrowserListRequestEvent(targetDisplay));
-
+            Selection.setMeetingChosen();
 
         } else if (targetDisplay.equals("linkedin") || targetDisplay.equals("google") || targetDisplay.equals("maps")) {
             EventsCenter.getInstance().post(new ShowBrowserEvent());
             EventsCenter.getInstance().post(new JumpToBrowserListRequestEvent(targetDisplay));
+            Selection.setMeetingNotChosen();
 
         } else {
             throw new CommandException(Messages.MESSAGE_INVALID_BROWSER_INDEX);
@@ -1049,7 +1063,7 @@ public class ChooseCommand extends Command {
 ``` css
 .background {
     -fx-background-color: derive(#0D47A1, 20%);
-    background-color: #283593; /* Used in the default.html file */
+    background-color: #eeeeee; /* Used in the default.html file */
 }
 
 .label {
@@ -1627,7 +1641,7 @@ public class ChooseCommand extends Command {
 ``` css
 .background {
     -fx-background-color: derive(#F57F17, 20%);
-    background-color: #F57F17; /* Used in the default.html file */
+    background-color: #eeeeee; /* Used in the default.html file */
 }
 
 #tags {

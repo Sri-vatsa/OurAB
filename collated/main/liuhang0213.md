@@ -123,6 +123,30 @@ public class PrefCommandParser implements Parser<PrefCommand> {
     }
 }
 ```
+###### /java/seedu/address/logic/commands/AddMeetingCommand.java
+``` java
+
+    /**
+     * Converts a list of visible indexes used in meeting to internal indexes
+     *
+     * @param visibleIds
+     * @return list of internal ids
+     * @throws IllegalValueException when the given visible index is not in the addressbook
+     */
+    private ArrayList<InternalId> convertVisibleIdsToInternal(ArrayList<Index> visibleIds)
+            throws IllegalValueException {
+        ArrayList<InternalId> internalIds = new ArrayList<>();
+        for (Index visibleId : visibleIds) {
+            try {
+                internalIds.add(model.visibleToInternalId(visibleId));
+            } catch (IllegalValueException e) {
+                throw new IllegalValueException(String.format(MESSAGE_ERROR_INVALID_INDEX, visibleId.getOneBased()));
+            }
+        }
+        return internalIds;
+    }
+}
+```
 ###### /java/seedu/address/logic/commands/NextMeetingCommand.java
 ``` java
 /**
@@ -279,6 +303,17 @@ public class PrefCommand extends Command {
 
 }
 ```
+###### /java/seedu/address/logic/commands/UndoableCommand.java
+``` java
+    /**
+     * Stores the current state of {@code model#meetingList}.
+     */
+    private void saveMeetingListSnapshot() {
+        requireNonNull(model);
+        this.previousMeetingList = new UniqueMeetingList(model.getMeetingList());
+    }
+
+```
 ###### /java/seedu/address/model/UniqueMeetingList.java
 ``` java
 /**
@@ -300,7 +335,7 @@ public class UniqueMeetingList implements Iterable<ReadOnlyMeeting>, ReadOnlyMee
      * Creates a UniqueMeetingList using given meetings.
      * Enforces no nulls.
      */
-    public UniqueMeetingList(List<Meeting> meetings) {
+    public UniqueMeetingList(List<ReadOnlyMeeting> meetings) {
         requireAllNonNull(meetings);
         internalList.addAll(meetings);
 
@@ -340,6 +375,15 @@ public class UniqueMeetingList implements Iterable<ReadOnlyMeeting>, ReadOnlyMee
         assert CollectionUtil.elementsAreUnique(internalList);
     }
 
+
+    /**
+     * Resets the existing data of this {@code UniqueMeetingList} with {@code newData}.
+     */
+    public void resetData(ReadOnlyMeetingList newData) {
+        requireNonNull(newData);
+        setMeetings(newData.getMeetingList());
+    }
+
     /**
      * Ensures every meeting in the argument list exists in this object.
      */
@@ -375,6 +419,63 @@ public class UniqueMeetingList implements Iterable<ReadOnlyMeeting>, ReadOnlyMee
         assert CollectionUtil.elementsAreUnique(internalList);
     }
 
+```
+###### /java/seedu/address/model/UniqueMeetingList.java
+``` java
+    /**
+     * Returns the meeting with earliest date in the internal list
+     * Currently not checking if it is happening in the future
+     */
+    @Override
+    public ReadOnlyMeeting getUpcomingMeeting() {
+        this.sortByDate();
+        return internalList.get(0);
+    }
+
+    public ObservableList<ReadOnlyMeeting> getInternalList() {
+        return internalList;
+    }
+
+    @Override
+    public Iterator<ReadOnlyMeeting> iterator() {
+        assert CollectionUtil.elementsAreUnique(internalList);
+        return internalList.iterator();
+    }
+
+    /**
+     * Returns the backing list as an unmodifiable {@code ObservableList}.
+     */
+    public ObservableList<ReadOnlyMeeting> asObservableList() {
+        assert CollectionUtil.elementsAreUnique(internalList);
+        return FXCollections.unmodifiableObservableList(internalList);
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        assert CollectionUtil.elementsAreUnique(internalList);
+        return other == this // short circuit if same object
+                || (other instanceof UniqueMeetingList // instanceof handles nulls
+                        && this.internalList.equals(((UniqueMeetingList) other).internalList));
+    }
+
+    /**
+     * Returns true if the element in this list is equal to the elements in {@code other}.
+     * The elements do not have to be in the same order.
+     */
+    public boolean equalsOrderInsensitive(UniqueMeetingList other) {
+        assert CollectionUtil.elementsAreUnique(internalList);
+        assert CollectionUtil.elementsAreUnique(other.internalList);
+        return this == other || new HashSet<>(this.internalList).equals(new HashSet<>(other.internalList));
+    }
+
+    @Override
+    public int hashCode() {
+        assert CollectionUtil.elementsAreUnique(internalList);
+        return internalList.hashCode();
+    }
+
+
+}
 ```
 ###### /java/seedu/address/model/ReadOnlyMeetingList.java
 ``` java
@@ -511,6 +612,50 @@ public class InternalId {
         indicateAddressBookChanged();
         indicatePersonDeleted(target);
     }
+```
+###### /java/seedu/address/model/ModelManager.java
+``` java
+    @Override
+    public InternalId visibleToInternalId(Index visibleId) throws IllegalValueException {
+        List<ReadOnlyPerson> lastShownList = getFilteredPersonList();
+
+        if (visibleId.getZeroBased() >= lastShownList.size()) {
+            throw new IllegalValueException(Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+        }
+        ReadOnlyPerson person = lastShownList.get(visibleId.getZeroBased());
+        return person.getInternalId();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        // short circuit if same object
+        if (obj == this) {
+            return true;
+        }
+
+        // instanceof handles nulls
+        if (!(obj instanceof ModelManager)) {
+            return false;
+        }
+
+        // state check
+        ModelManager other = (ModelManager) obj;
+        return addressBook.equals(other.addressBook)
+                && filteredPersons.equals(other.filteredPersons)
+                && meetingList.equals(other.meetingList);
+    }
+
+    //=========== Google Map Method =============================================================
+
+```
+###### /java/seedu/address/model/Model.java
+``` java
+    /**
+     * Converts a visible index to the corresponding internal id of the person
+     * @param visibleId
+     * @return InternalId of the person
+     */
+    InternalId visibleToInternalId(Index visibleId) throws IllegalValueException;
 ```
 ###### /java/seedu/address/model/AddressBook.java
 ``` java
@@ -655,7 +800,7 @@ public class Meeting implements ReadOnlyMeeting {
     }
 
     /**
-     * Returns the state of the Meeting as string for viewing.
+     * Returns the state of the eeting as text for viewing.
      */
     public String toString() {
         return "Date: " + dateTime.format(DATE_FORMATTER) + "  Time: " + dateTime.format(TIME_FORMATTER) + '\n'
@@ -780,6 +925,7 @@ public class Meeting implements ReadOnlyMeeting {
             logger.warning(String.format("Gravatar not downloaded for %1$s.", person.getName()));
         }
     }
+
 }
 ```
 ###### /java/seedu/address/storage/XmlAdaptedMeeting.java
@@ -969,6 +1115,7 @@ public interface MeetingListStorage {
      * @param def The default style of profile photo
      */
     void downloadProfilePhoto(ReadOnlyPerson person, String def);
+
 }
 ```
 ###### /java/seedu/address/storage/XmlSerializableData.java

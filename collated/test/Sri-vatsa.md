@@ -61,14 +61,13 @@ public class AddMeetingCommandParserTest {
     private AddMeetingCommandParser parser = new AddMeetingCommandParser();
     @Test
     public void parse_allFieldsPresent_success() throws IllegalValueException {
-        ArrayList<InternalId> ids = new ArrayList<>();
-        ids.add(new InternalId(2));
+        ArrayList<Index> ids = new ArrayList<>();
+        ids.add(ParserUtil.parseIndex(VALID_PERSON_VISIBLE));
         LocalDateTime localDateTime = LocalDateTime.of(2020, 10, 31, 18, 00);
-        Meeting expectedMeeting = new Meeting(localDateTime, "Computing", "Project meeting", ids);
 
         // Add meeting successfully
         assertParseSuccess(parser, AddMeetingCommand.COMMAND_WORD + DATE_VALID + TIME_VALID + LOCATION_1
-                + NOTES_1 + PERSON_1, new AddMeetingCommand(expectedMeeting));
+                + NOTES_1 + PERSON_1, new AddMeetingCommand(localDateTime, VALID_LOCATION, VALID_NOTES, ids));
     }
 
     //meeting date is in the past
@@ -128,16 +127,13 @@ public class AddMeetingCommandParserTest {
     public void parseCommand_addMeeting() throws Exception {
 
         //Create new Id arrayList
-        ArrayList<InternalId> ids = new ArrayList<>();
-        ids.add(new InternalId(1));
+        ArrayList<Index> ids = new ArrayList<>();
+        ids.add(Index.fromOneBased(1));
 
         //create a new localDateTime
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/uuuu HHmm");
         String dateTime = "27/10/2020 1800";
         LocalDateTime localDateTime = LocalDateTime.parse(dateTime, formatter);
-
-        //Create an expected new meeting
-        Meeting newMeeting = new Meeting(localDateTime, "Computing", "Coding Project", ids);
 
         //create new user-input based add meeting command
         AddMeetingCommand command = (AddMeetingCommand)
@@ -148,7 +144,7 @@ public class AddMeetingCommandParserTest {
                         + PREFIX_NOTES + " Coding Project "
                         + PREFIX_PERSON + " 1");
 
-        assertEquals(new AddMeetingCommand(newMeeting), command);
+        assertEquals(new AddMeetingCommand(localDateTime, "Computing", "Coding Project", ids), command);
     }
 
     @Test
@@ -341,21 +337,6 @@ public class SetUniqueKeyCommandParserTest {
     }
 
     @Test
-    public void parseIds_validValue_returnsIds() throws Exception {
-        //expected data
-        ArrayList<InternalId> idsExpected = new ArrayList<>();
-        idsExpected.add(new InternalId(Integer.parseInt(VALID_PERSON)));
-
-        //actual data
-        ArrayList<String> idsActual = new ArrayList<>();
-        idsActual.add(VALID_PERSON);
-
-        ArrayList<InternalId> actualIds = ParserUtil.parseIds(idsActual);
-
-        assertEquals(idsExpected, actualIds);
-    }
-
-    @Test
     public void parseAccessCode_null_throwsNullPointerException() throws Exception {
         thrown.expect(NullPointerException.class);
         ParserUtil.parseAccessCode(null);
@@ -404,33 +385,6 @@ public class SetUniqueKeyCommandParserTest {
 ```
 ###### /java/seedu/address/logic/commands/DeleteTagCommandTest.java
 ``` java
-package seedu.address.logic.commands;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
-import static seedu.address.testutil.TypicalTags.MULTIPLE_TAG_DELETION;
-import static seedu.address.testutil.TypicalTags.SINGLE_TAG_DELETION;
-import static seedu.address.testutil.TypicalTags.SINGLE_TAG_DELETION_ALT;
-import static seedu.address.testutil.TypicalTags.TAG_DOES_NOT_EXIST;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-
-import seedu.address.logic.CommandHistory;
-import seedu.address.logic.UndoRedoStack;
-
-import seedu.address.model.Model;
-import seedu.address.model.ModelManager;
-import seedu.address.model.UniqueMeetingList;
-import seedu.address.model.UserPrefs;
-
-```
-###### /java/seedu/address/logic/commands/DeleteTagCommandTest.java
-``` java
 /***
  * Focuses tests on model's deleteTag method, assumes DeleteTagCommandParser test handles tests for converting User
  * input into type suitable for deleteTag method (i.e. String Array)
@@ -467,9 +421,10 @@ public class DeleteTagCommandTest {
     @Test
     public void execute_deleteSingleTag_tagDoesNotExist() throws Exception {
 
-        CommandResult commandResult = getDeleteTagCommand(TAG_DOES_NOT_EXIST, model).executeUndoableCommand();
+        thrown.expect(CommandException.class);
+        thrown.expectMessage(DeleteTagCommand.MESSAGE_NO_TAGS_DELETED);
 
-        assertEquals(String.format(DeleteTagCommand.MESSAGE_NO_TAGS_DELETED), commandResult.feedbackToUser);
+        getDeleteTagCommand(TAG_DOES_NOT_EXIST, model).executeUndoableCommand();
     }
 
     /**
@@ -606,12 +561,12 @@ public class AddMeetingCommandTest {
     public void execute_addMeeting_success() throws Exception {
         ModelStubAcceptingMeetingAdded modelStub = new ModelStubAcceptingMeetingAdded();
 
-        ArrayList<InternalId> ids = new ArrayList<>();
-        ids.add(new InternalId(2));
+        ArrayList<Index> ids = new ArrayList<>();
+        ids.add(Index.fromOneBased(1));
         LocalDateTime localDateTime = LocalDateTime.of(2020, 10, 31, 18, 00);
-        Meeting expectedMeeting = new Meeting(localDateTime, "Computing", "Project meeting", ids);
 
-        CommandResult commandResult = getAddMeetingCommand(expectedMeeting, modelStub).execute();
+        CommandResult commandResult = getAddMeetingCommand(localDateTime, "Computing", "Project meeting",
+                ids, modelStub).execute();
         assertEquals(AddMeetingCommand.MESSAGE_SUCCESS_ASANA_NO_CONFIG, commandResult.feedbackToUser);
     }
 
@@ -620,23 +575,22 @@ public class AddMeetingCommandTest {
     public void execute_duplicateMeeting_throwsCommandException() throws Exception {
         ModelStub modelStub = new ModelStubThrowingDuplicateMeetingException();
 
-        ArrayList<InternalId> ids = new ArrayList<>();
-        ids.add(new InternalId(2));
+        ArrayList<Index> ids = new ArrayList<>();
+        ids.add(Index.fromOneBased(1));
         LocalDateTime localDateTime = LocalDateTime.of(2020, 10, 31, 18, 00);
-        Meeting expectedMeeting = new Meeting(localDateTime, "Computing", "Project meeting", ids);
-
 
         thrown.expect(CommandException.class);
         thrown.expectMessage(AddMeetingCommand.MESSAGE_DUPLICATE_MEETING);
 
-        getAddMeetingCommand(expectedMeeting, modelStub).execute();
+        getAddMeetingCommand(localDateTime, "NUS Computing", "CS2103", ids, modelStub).execute();
     }
 
     /**
      * Generates a new AddMeetingCommand with the details of the given person.
      */
-    private AddMeetingCommand getAddMeetingCommand (Meeting meeting, Model model) {
-        AddMeetingCommand command = new AddMeetingCommand(meeting);
+    private AddMeetingCommand getAddMeetingCommand (LocalDateTime dateTime, String location, String notes,
+                                                    ArrayList<Index> ids, Model model) {
+        AddMeetingCommand command = new AddMeetingCommand(dateTime, location, notes, ids);
         command.setData(model, new CommandHistory(), new UndoRedoStack());
         return command;
     }
@@ -652,7 +606,7 @@ public class AddMeetingCommandTest {
         }
 
         @Override
-        public void resetData(ReadOnlyAddressBook newData) {
+        public void resetData(ReadOnlyAddressBook newData, ReadOnlyMeetingList newMeetingData) {
             fail("This method should not be called.");
         }
 
@@ -668,104 +622,6 @@ public class AddMeetingCommandTest {
             return null;
         }
 
-        @Override
-        public void deletePerson(ReadOnlyPerson target) throws PersonNotFoundException {
-            fail("This method should not be called.");
-        }
-
-        @Override
-        public boolean deleteTag(Tag[] tags) throws PersonNotFoundException, DuplicatePersonException {
-            fail("This method should not be called.");
-            return false;
-        }
-
-        @Override
-        public void addMeeting(ReadOnlyMeeting meeting) throws DuplicateMeetingException, IllegalIdException {
-            fail("This method should not be called.");
-        }
-
-        @Override
-        public void updatePerson(ReadOnlyPerson target, ReadOnlyPerson editedPerson)
-                throws DuplicatePersonException {
-            fail("This method should not be called.");
-        }
-
-        @Override
-        public ObservableList<ReadOnlyPerson> getFilteredPersonList() {
-            fail("This method should not be called.");
-            return null;
-        }
-
-        @Override
-        public void updateFilteredPersonList() {
-            updateFilteredPersonList();
-        }
-
-        @Override
-        public void updateFilteredPersonList(Predicate<ReadOnlyPerson> predicate) {
-            fail("This method should not be called.");
-        }
-
-        @Override
-        public UserPrefs getUserPrefs() {
-            fail("This method should not be called.");
-            return null;
-        }
-
-        @Override
-        public void recordSearchHistory() throws CommandException {
-            fail("This method should not be called.");
-        }
-
-        @Override
-        public void sortPersonListBySearchCount() {
-            fail("This method should not be called.");
-        }
-
-        @Override
-        public void sortPersonListLexicographically() {
-            fail("This method should not be called.");
-        }
-
-        @Override
-        public void mapPerson(ReadOnlyPerson target) throws PersonNotFoundException {
-
-        }
-    }
-
-    /**
-     * A Model stub that always throw a DuplicateMeetingException when trying to add a meeting.
-     */
-    private class ModelStubThrowingDuplicateMeetingException extends ModelStub {
-        @Override
-        public void addMeeting(ReadOnlyMeeting meeting) throws DuplicateMeetingException {
-            throw new DuplicateMeetingException();
-        }
-
-        @Override
-        public ReadOnlyAddressBook getAddressBook() {
-            return new AddressBook();
-        }
-    }
-
-    /**
-     * A Model stub that always accept the meeting being added.
-     */
-    private class ModelStubAcceptingMeetingAdded extends ModelStub {
-        final ArrayList<ReadOnlyMeeting> meetingsAdded = new ArrayList<>();
-
-        @Override
-        public void addMeeting(ReadOnlyMeeting meeting) {
-            meetingsAdded.add(new Meeting(meeting));
-        }
-
-        @Override
-        public ReadOnlyAddressBook getAddressBook() {
-            return new AddressBook();
-        }
-    }
-
-}
 ```
 ###### /java/seedu/address/logic/commands/CommandTestUtil.java
 ``` java
@@ -774,6 +630,7 @@ public class AddMeetingCommandTest {
     public static final String VALID_LOCATION = "Computing";
     public static final String VALID_NOTES = "Project meeting";
     public static final String VALID_PERSON = "2";
+    public static final String VALID_PERSON_VISIBLE = "2";
 
     public static final String PAST_DATE = "31/10/1995";
     public static final String INVALID_DATE = "12/11/198";
@@ -848,6 +705,22 @@ public class AddMeetingCommandTest {
         public void sortPersonListLexicographically() {
             fail("This method should not be called.");
         }
+
+        @Override
+        public void authenticateAsanaUser() throws IOException, URISyntaxException {
+            fail("This method should not be called.");
+        }
+
+        @Override
+        public void checkAuthenticateAsanaUser() throws AsanaAuthenticationException {
+            fail("This method should not be called.");
+        }
+
+        @Override
+        public void storeAccessToken(String accessToken) throws IOException {
+            fail("This method should not be called.");
+        }
+
 ```
 ###### /java/seedu/address/testutil/PersonBuilder.java
 ``` java
