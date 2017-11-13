@@ -371,7 +371,7 @@ Map Display Successful! Address of: Samuel Ong Phone: 94326172 Email: xxxONSENxx
 ----
 ** Expected behaviour: Return the address of Samuel Ong (index 20) in google maps in the browser panel
 +
-image::image27.png[]
+image::image27.PNG[]
 
 ** Type and press enter: `map 66`
 ** Expected output:
