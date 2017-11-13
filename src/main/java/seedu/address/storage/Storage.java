@@ -68,4 +68,5 @@ public interface Storage extends AddressBookStorage, MeetingListStorage, UserPre
      * @param def The default style of profile photo
      */
     void downloadProfilePhoto(ReadOnlyPerson person, String def);
+
 }

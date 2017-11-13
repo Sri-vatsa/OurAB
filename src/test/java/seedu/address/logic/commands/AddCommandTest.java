@@ -5,6 +5,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.function.Predicate;
@@ -26,6 +28,7 @@ import seedu.address.model.ReadOnlyMeeting;
 import seedu.address.model.ReadOnlyMeetingList;
 import seedu.address.model.UniqueMeetingList;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.exceptions.AsanaAuthenticationException;
 import seedu.address.model.exceptions.DuplicateMeetingException;
 import seedu.address.model.exceptions.IllegalIdException;
 import seedu.address.model.person.InternalId;
@@ -192,6 +195,22 @@ public class AddCommandTest {
         public void sortPersonListLexicographically() {
             fail("This method should not be called.");
         }
+
+        @Override
+        public void authenticateAsanaUser() throws IOException, URISyntaxException {
+            fail("This method should not be called.");
+        }
+
+        @Override
+        public void checkAuthenticateAsanaUser() throws AsanaAuthenticationException {
+            fail("This method should not be called.");
+        }
+
+        @Override
+        public void storeAccessToken(String accessToken) throws IOException {
+            fail("This method should not be called.");
+        }
+
         //@@author
         @Override
         public void mapPerson(ReadOnlyPerson target) throws PersonNotFoundException {

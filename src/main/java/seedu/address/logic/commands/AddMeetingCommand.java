@@ -23,8 +23,6 @@ import seedu.address.model.Meeting;
 
 import seedu.address.model.ReadOnlyMeeting;
 
-import seedu.address.model.asana.PostTask;
-
 import seedu.address.model.exceptions.DuplicateMeetingException;
 
 import seedu.address.model.exceptions.IllegalIdException;

@@ -4,11 +4,14 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.fail;
 import static seedu.address.testutil.TypicalMeetings.getTypicalMeetingList;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 
 import java.util.ArrayList;
 import java.util.function.Predicate;
 
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -28,6 +31,7 @@ import seedu.address.model.ReadOnlyMeeting;
 import seedu.address.model.ReadOnlyMeetingList;
 import seedu.address.model.UniqueMeetingList;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.exceptions.AsanaAuthenticationException;
 import seedu.address.model.exceptions.DuplicateMeetingException;
 import seedu.address.model.exceptions.IllegalIdException;
 import seedu.address.model.person.InternalId;
@@ -183,8 +187,23 @@ public class AddMeetingCommandTest {
         }
 
         @Override
-        public void mapPerson(ReadOnlyPerson target) throws PersonNotFoundException {
+        public void authenticateAsanaUser() throws IOException, URISyntaxException {
+            Assert.fail("This method should not be called.");
+        }
 
+        @Override
+        public void checkAuthenticateAsanaUser() throws AsanaAuthenticationException {
+            Assert.fail("This method should not be called.");
+        }
+
+        @Override
+        public void storeAccessToken(String accessToken) throws IOException {
+            Assert.fail("This method should not be called.");
+        }
+
+        @Override
+        public void mapPerson(ReadOnlyPerson target) throws PersonNotFoundException {
+            Assert.fail("This method should not be called.");
         }
     }
 

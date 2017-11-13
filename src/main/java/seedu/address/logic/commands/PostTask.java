@@ -1,4 +1,4 @@
-package seedu.address.model.asana;
+package seedu.address.logic.commands;
 
 import java.io.IOException;
 import java.text.DateFormat;
@@ -14,8 +14,6 @@ import com.asana.models.User;
 import com.asana.models.Workspace;
 
 import jdk.nashorn.internal.ir.annotations.Ignore;
-import seedu.address.logic.commands.Command;
-import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.exceptions.AsanaAuthenticationException;
 import seedu.address.storage.asana.storage.AsanaCredentials;
@@ -39,7 +37,7 @@ public class PostTask extends Command {
 
         Client client;
         try {
-            new CheckAuthenticateAsanaUser();
+            model.checkAuthenticateAsanaUser();
             client = Client.accessToken((new AsanaCredentials()).getAccessToken());
             //get user data
             User user = client.users.me().execute();

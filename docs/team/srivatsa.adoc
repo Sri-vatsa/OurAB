@@ -438,8 +438,7 @@ is retrieved from Asana and stored temporarily in `Asana Credentials`.
 
 ---
 
-
-=== Other contributions
+=== Other technical contributions
 
 ==== Tests
 
@@ -459,11 +458,22 @@ class.
 
 Each person has now an associated `searchCount` variable that keeps track of the number each person is searched for.
 
+
+==== In charge of Model
+
+* Ensure model class diagram is updated
+* Clean up code for model as much as possible
+*
+
+=== Other non-technical contributions
+
 ==== Project Management
 
 * Assigned issues to teammates
 * Monitored progress and created milestones of the team
 * Constantly reviewed if users' needs were considered
+
+
 
 
 

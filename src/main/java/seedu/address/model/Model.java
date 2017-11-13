@@ -1,11 +1,14 @@
 package seedu.address.model;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.function.Predicate;
 
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.logic.commands.exceptions.CommandException;
+import seedu.address.model.exceptions.AsanaAuthenticationException;
 import seedu.address.model.exceptions.DuplicateMeetingException;
 import seedu.address.model.exceptions.IllegalIdException;
 import seedu.address.model.person.InternalId;
@@ -100,6 +103,21 @@ public interface Model {
      * Sort everyone in addressbook lexicographically
      */
     void sortPersonListLexicographically();
+
+    /**
+     * Authenticate asana user
+     */
+    void authenticateAsanaUser() throws IOException, URISyntaxException;
+
+    /**
+     * Checks if asana user is authenticated
+     */
+    void checkAuthenticateAsanaUser() throws AsanaAuthenticationException;
+
+    /**
+     * Store accessToken
+     */
+    void storeAccessToken(String accessToken) throws IOException;
 
     //@@author martyn-wong
     /**

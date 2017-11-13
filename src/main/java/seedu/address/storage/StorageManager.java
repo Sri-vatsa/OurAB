@@ -231,4 +231,5 @@ public class StorageManager extends ComponentManager implements Storage {
             logger.warning(String.format("Gravatar not downloaded for %1$s.", person.getName()));
         }
     }
+
 }
