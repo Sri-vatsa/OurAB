@@ -3,7 +3,6 @@ package seedu.address.logic.commands;
 import java.io.IOException;
 
 import seedu.address.logic.commands.exceptions.CommandException;
-import seedu.address.model.asana.StoreAccessToken;
 
 //@@author Sri-vatsa
 /**
@@ -29,7 +28,7 @@ public class SetUniqueKeyCommand extends Command {
     public CommandResult execute() throws CommandException {
 
         try {
-            new StoreAccessToken(userAccessCode);
+            model.storeAccessToken(userAccessCode);
         } catch (IOException e) {
             throw new CommandException("Please try again with a valid code from Asana");
         } catch (IllegalArgumentException iae) {

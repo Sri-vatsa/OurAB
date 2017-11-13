@@ -33,7 +33,7 @@ public class UniqueMeetingList implements Iterable<ReadOnlyMeeting>, ReadOnlyMee
      * Creates a UniqueMeetingList using given meetings.
      * Enforces no nulls.
      */
-    public UniqueMeetingList(List<Meeting> meetings) {
+    public UniqueMeetingList(List<ReadOnlyMeeting> meetings) {
         requireAllNonNull(meetings);
         internalList.addAll(meetings);
 

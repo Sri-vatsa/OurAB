@@ -4,6 +4,8 @@ import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 import static seedu.address.logic.commands.EditCommand.MESSAGE_DUPLICATE_PERSON;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -19,6 +21,10 @@ import seedu.address.commons.events.model.MeetingListChangedEvent;
 import seedu.address.commons.events.model.PersonChangedEvent;
 import seedu.address.commons.events.ui.MapPersonEvent;
 import seedu.address.logic.commands.exceptions.CommandException;
+import seedu.address.model.asana.AuthenticateAsanaUser;
+import seedu.address.model.asana.CheckAuthenticateAsanaUser;
+import seedu.address.model.asana.StoreAccessToken;
+import seedu.address.model.exceptions.AsanaAuthenticationException;
 import seedu.address.model.exceptions.DuplicateMeetingException;
 import seedu.address.model.exceptions.IllegalIdException;
 import seedu.address.model.person.InternalId;
@@ -261,6 +267,23 @@ public class ModelManager extends ComponentManager implements Model {
         addressBook.sortLexicographically();
         updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);
         indicateAddressBookChanged();
+    }
+
+    //=========== Asana methods =============================================================
+
+    @Override
+    public void authenticateAsanaUser() throws IOException, URISyntaxException {
+        new AuthenticateAsanaUser();
+    }
+
+    @Override
+    public void checkAuthenticateAsanaUser() throws AsanaAuthenticationException {
+        new CheckAuthenticateAsanaUser();
+    }
+
+    @Override
+    public void storeAccessToken(String accessToken) throws IOException {
+        new StoreAccessToken(accessToken);
     }
     //@@author
 
