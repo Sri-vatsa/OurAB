@@ -36,14 +36,14 @@ public abstract class UndoableCommand extends Command {
         this.previousMeetingList = new UniqueMeetingList(model.getMeetingList());
     }
 
-    //@@author liuhang0213
+    //@@author
     /**
      * Reverts the AddressBook to the state before this command
      * was executed and updates the filtered person list to
      * show all persons.
      */
     protected final void undo() {
-        requireAllNonNull(model, previousAddressBook);
+        requireAllNonNull(model, previousAddressBook, previousMeetingList);
         model.resetData(previousAddressBook, previousMeetingList);
         model.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);
     }

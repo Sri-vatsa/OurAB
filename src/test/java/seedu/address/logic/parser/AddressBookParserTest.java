@@ -21,6 +21,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.AddMeetingCommand;
 import seedu.address.logic.commands.ClearCommand;
@@ -41,8 +42,6 @@ import seedu.address.logic.commands.SetUniqueKeyCommand;
 import seedu.address.logic.commands.SetupAsanaCommand;
 import seedu.address.logic.commands.UndoCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
-import seedu.address.model.Meeting;
-import seedu.address.model.person.InternalId;
 import seedu.address.model.person.Person;
 import seedu.address.testutil.EditPersonDescriptorBuilder;
 import seedu.address.testutil.PersonBuilder;
@@ -136,16 +135,13 @@ public class AddressBookParserTest {
     public void parseCommand_addMeeting() throws Exception {
 
         //Create new Id arrayList
-        ArrayList<InternalId> ids = new ArrayList<>();
-        ids.add(new InternalId(1));
+        ArrayList<Index> ids = new ArrayList<>();
+        ids.add(Index.fromOneBased(1));
 
         //create a new localDateTime
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/uuuu HHmm");
         String dateTime = "27/10/2020 1800";
         LocalDateTime localDateTime = LocalDateTime.parse(dateTime, formatter);
-
-        //Create an expected new meeting
-        Meeting newMeeting = new Meeting(localDateTime, "Computing", "Coding Project", ids);
 
         //create new user-input based add meeting command
         AddMeetingCommand command = (AddMeetingCommand)
@@ -156,7 +152,7 @@ public class AddressBookParserTest {
                         + PREFIX_NOTES + " Coding Project "
                         + PREFIX_PERSON + " 1");
 
-        assertEquals(new AddMeetingCommand(newMeeting), command);
+        assertEquals(new AddMeetingCommand(localDateTime, "Computing", "Coding Project", ids), command);
     }
 
     @Test

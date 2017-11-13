@@ -2,6 +2,7 @@ package seedu.address.logic.commands;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.fail;
+import static seedu.address.testutil.TypicalMeetings.getTypicalMeetingList;
 
 import java.time.LocalDateTime;
 
@@ -14,6 +15,8 @@ import org.junit.rules.ExpectedException;
 
 import javafx.collections.ObservableList;
 
+import seedu.address.commons.core.index.Index;
+import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.logic.CommandHistory;
 import seedu.address.logic.UndoRedoStack;
 import seedu.address.logic.commands.exceptions.CommandException;
@@ -23,6 +26,7 @@ import seedu.address.model.Model;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.ReadOnlyMeeting;
 import seedu.address.model.ReadOnlyMeetingList;
+import seedu.address.model.UniqueMeetingList;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.exceptions.DuplicateMeetingException;
 import seedu.address.model.exceptions.IllegalIdException;
@@ -48,12 +52,12 @@ public class AddMeetingCommandTest {
     public void execute_addMeeting_success() throws Exception {
         ModelStubAcceptingMeetingAdded modelStub = new ModelStubAcceptingMeetingAdded();
 
-        ArrayList<InternalId> ids = new ArrayList<>();
-        ids.add(new InternalId(2));
+        ArrayList<Index> ids = new ArrayList<>();
+        ids.add(Index.fromOneBased(1));
         LocalDateTime localDateTime = LocalDateTime.of(2020, 10, 31, 18, 00);
-        Meeting expectedMeeting = new Meeting(localDateTime, "Computing", "Project meeting", ids);
 
-        CommandResult commandResult = getAddMeetingCommand(expectedMeeting, modelStub).execute();
+        CommandResult commandResult = getAddMeetingCommand(localDateTime, "Computing", "Project meeting",
+                ids, modelStub).execute();
         assertEquals(AddMeetingCommand.MESSAGE_SUCCESS_ASANA_NO_CONFIG, commandResult.feedbackToUser);
     }
 
@@ -62,23 +66,22 @@ public class AddMeetingCommandTest {
     public void execute_duplicateMeeting_throwsCommandException() throws Exception {
         ModelStub modelStub = new ModelStubThrowingDuplicateMeetingException();
 
-        ArrayList<InternalId> ids = new ArrayList<>();
-        ids.add(new InternalId(2));
+        ArrayList<Index> ids = new ArrayList<>();
+        ids.add(Index.fromOneBased(1));
         LocalDateTime localDateTime = LocalDateTime.of(2020, 10, 31, 18, 00);
-        Meeting expectedMeeting = new Meeting(localDateTime, "Computing", "Project meeting", ids);
-
 
         thrown.expect(CommandException.class);
         thrown.expectMessage(AddMeetingCommand.MESSAGE_DUPLICATE_MEETING);
 
-        getAddMeetingCommand(expectedMeeting, modelStub).execute();
+        getAddMeetingCommand(localDateTime, "NUS Computing", "CS2103", ids, modelStub).execute();
     }
 
     /**
      * Generates a new AddMeetingCommand with the details of the given person.
      */
-    private AddMeetingCommand getAddMeetingCommand (Meeting meeting, Model model) {
-        AddMeetingCommand command = new AddMeetingCommand(meeting);
+    private AddMeetingCommand getAddMeetingCommand (LocalDateTime dateTime, String location, String notes,
+                                                    ArrayList<Index> ids, Model model) {
+        AddMeetingCommand command = new AddMeetingCommand(dateTime, location, notes, ids);
         command.setData(model, new CommandHistory(), new UndoRedoStack());
         return command;
     }
@@ -110,6 +113,16 @@ public class AddMeetingCommandTest {
             return null;
         }
 
+        //@@author liuhang0213
+        @Override
+        /**
+         * Returns an internal id identical to visible id
+         */
+        public InternalId visibleToInternalId(Index visibleId) throws IllegalValueException {
+            return new InternalId(visibleId.getOneBased());
+        }
+
+        //@@author
         @Override
         public void deletePerson(ReadOnlyPerson target) throws PersonNotFoundException {
             fail("This method should not be called.");
@@ -188,6 +201,11 @@ public class AddMeetingCommandTest {
         public ReadOnlyAddressBook getAddressBook() {
             return new AddressBook();
         }
+
+        @Override
+        public ReadOnlyMeetingList getMeetingList() {
+            return new UniqueMeetingList();
+        }
     }
 
     /**
@@ -204,6 +222,11 @@ public class AddMeetingCommandTest {
         @Override
         public ReadOnlyAddressBook getAddressBook() {
             return new AddressBook();
+        }
+
+        @Override
+        public ReadOnlyMeetingList getMeetingList() {
+            return getTypicalMeetingList();
         }
     }
 
