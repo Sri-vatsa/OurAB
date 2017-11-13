@@ -48,6 +48,7 @@ public class CommandTestUtil {
     public static final String VALID_LOCATION = "Computing";
     public static final String VALID_NOTES = "Project meeting";
     public static final String VALID_PERSON = "2";
+    public static final String VALID_PERSON_VISIBLE = "2";
 
     public static final String PAST_DATE = "31/10/1995";
     public static final String INVALID_DATE = "12/11/198";

@@ -146,15 +146,15 @@ public class LogicManager extends ComponentManager implements Logic {
     @Override
     public ArrayList<String> getMeetingNames(ReadOnlyMeeting meeting) {
         ArrayList<String> nameList = new ArrayList<>();
-        try {
-            for (InternalId id : meeting.getListOfPersonsId()) {
+        for (InternalId id : meeting.getListOfPersonsId()) {
+            try {
                 nameList.add(model.getAddressBook().getPersonByInternalIndex(id.getId()).getName().fullName);
+            } catch (PersonNotFoundException e) {
+                logger.warning(String.format("Person with index %1$d not found. Entry was probably deleted.",
+                        id.getId()));
             }
-            return nameList;
-        } catch (PersonNotFoundException e) {
-            logger.info(e.getMessage());
-            return nameList;
         }
+        return nameList;
     }
     //@@author
 

@@ -11,7 +11,12 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.text.ParseException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Objects;
 
+import seedu.address.commons.core.index.Index;
+import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.logic.commands.exceptions.CommandException;
 
 import seedu.address.model.Meeting;
@@ -22,13 +27,14 @@ import seedu.address.model.exceptions.DuplicateMeetingException;
 
 import seedu.address.model.exceptions.IllegalIdException;
 
+import seedu.address.model.person.InternalId;
 import seedu.address.storage.asana.storage.AsanaCredentials;
 
 //@@author Sri-vatsa
 /**
  * Adds a new meeting to the address book.
  */
-public class AddMeetingCommand extends Command {
+public class AddMeetingCommand extends UndoableCommand {
 
     public static final String COMMAND_WORD = "addMeeting";
     public static final String COMMAND_ALIAS = "am";
@@ -59,6 +65,7 @@ public class AddMeetingCommand extends Command {
             + "Setup Asana to post the meeting on Asana.";
     public static final String MESSAGE_SUCCESS_LOCAL = "New meeting added locally!\n"
             + "Connect to the internet and setup Asana to post a meeting on Asana.";
+    public static final String MESSAGE_ERROR_INVALID_INDEX = "Person with index %1$d not found.\n";
     public static final String MESSAGE_DUPLICATE_MEETING = "This meeting already exists in the address book";
     public static final String MESSAGE_INVALID_ID = "Please input a valid person id!";
     public static final String MESSAGE_TEMPLATE = COMMAND_WORD + " "
@@ -69,16 +76,36 @@ public class AddMeetingCommand extends Command {
             + PREFIX_PERSON + "PERSON ...";
 
 
-    private final Meeting toAdd;
+    private Meeting toAdd;
+    private LocalDateTime localDateTime;
+    private String location;
+    private String notes;
+    private ArrayList<Index> idList;
 
     public AddMeetingCommand(ReadOnlyMeeting meeting) {
         toAdd = new Meeting(meeting);
     }
 
+    public AddMeetingCommand(LocalDateTime localDateTime, String location, String notes, ArrayList<Index> idList) {
+        this.localDateTime = localDateTime;
+        this.location = location;
+        this.notes = notes;
+        this.idList = idList;
+    }
 
     @Override
-    public CommandResult execute() throws CommandException {
+    public CommandResult executeUndoableCommand() throws CommandException {
         requireNonNull(model);
+
+        ArrayList<InternalId> internalIds = null;
+        try {
+            internalIds = convertVisibleIdsToInternal(this.idList);
+        } catch (IllegalValueException e) {
+            throw new CommandException(String.format(e.getMessage()));
+        }
+
+        toAdd = new Meeting(localDateTime, location, notes, internalIds);
+
         AsanaCredentials asanaCredentials = new AsanaCredentials();
 
         //if there is internet connection && asana is configured
@@ -132,7 +159,10 @@ public class AddMeetingCommand extends Command {
     public boolean equals(Object other) {
         return other == this // short circuit if same object
                 || (other instanceof AddMeetingCommand // instanceof handles nulls
-                && toAdd.equals(((AddMeetingCommand) other).toAdd));
+                && Objects.equals(this.location, ((AddMeetingCommand) other).location))
+                && this.notes.equals(((AddMeetingCommand) other).notes)
+                && this.localDateTime.equals(((AddMeetingCommand) other).localDateTime)
+                && this.idList.equals(((AddMeetingCommand) other).idList);
     }
 
     /**
@@ -154,5 +184,27 @@ public class AddMeetingCommand extends Command {
                 return false;
             }
         }
+    }
+
+    //@@author liuhang0213
+
+    /**
+     * Converts a list of visible indexes used in meeting to internal indexes
+     *
+     * @param visibleIds
+     * @return list of internal ids
+     * @throws IllegalValueException when the given visible index is not in the addressbook
+     */
+    private ArrayList<InternalId> convertVisibleIdsToInternal(ArrayList<Index> visibleIds)
+            throws IllegalValueException {
+        ArrayList<InternalId> internalIds = new ArrayList<>();
+        for (Index visibleId : visibleIds) {
+            try {
+                internalIds.add(model.visibleToInternalId(visibleId));
+            } catch (IllegalValueException e) {
+                throw new IllegalValueException(String.format(MESSAGE_ERROR_INVALID_INDEX, visibleId.getOneBased()));
+            }
+        }
+        return internalIds;
     }
 }

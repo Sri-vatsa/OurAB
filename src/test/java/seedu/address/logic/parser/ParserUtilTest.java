@@ -23,7 +23,6 @@ import org.junit.rules.ExpectedException;
 import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
-import seedu.address.model.person.InternalId;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Phone;
 import seedu.address.model.tag.Tag;
@@ -320,21 +319,6 @@ public class ParserUtilTest {
         ArrayList<String> ids = new ArrayList<>();
         ids.add(INVALID_PERSON);
         ParserUtil.parseIds(ids);
-    }
-
-    @Test
-    public void parseIds_validValue_returnsIds() throws Exception {
-        //expected data
-        ArrayList<InternalId> idsExpected = new ArrayList<>();
-        idsExpected.add(new InternalId(Integer.parseInt(VALID_PERSON)));
-
-        //actual data
-        ArrayList<String> idsActual = new ArrayList<>();
-        idsActual.add(VALID_PERSON);
-
-        ArrayList<InternalId> actualIds = ParserUtil.parseIds(idsActual);
-
-        assertEquals(idsExpected, actualIds);
     }
 
     @Test
