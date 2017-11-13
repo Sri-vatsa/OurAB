@@ -15,6 +15,7 @@ import com.asana.models.Workspace;
 
 import jdk.nashorn.internal.ir.annotations.Ignore;
 import seedu.address.logic.commands.exceptions.CommandException;
+import seedu.address.model.asana.CheckAuthenticateAsanaUser;
 import seedu.address.model.exceptions.AsanaAuthenticationException;
 import seedu.address.storage.asana.storage.AsanaCredentials;
 
@@ -37,7 +38,7 @@ public class PostTask extends Command {
 
         Client client;
         try {
-            model.checkAuthenticateAsanaUser();
+            new CheckAuthenticateAsanaUser();
             client = Client.accessToken((new AsanaCredentials()).getAccessToken());
             //get user data
             User user = client.users.me().execute();
